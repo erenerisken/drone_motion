@@ -2,33 +2,23 @@
 #include <geometry_msgs/Twist.h>
 #include <hectorquad/coordinate.h>
 #include <gazebo_msgs/ModelStates.h>
+#include "motionUtilities.hpp"
 
 #define EPSILON 0.1
-#define SPEED 1
+#define SPEED 1.0
 #define QUADNAME "quadrotor"
 
-class Coordinate
-    {
-        public:    
-            double x,y,z;
-            Coordinate(double x, double y, double z) : x(x), y(y), z(z) {}
-            Coordinate()
-                {
-                    x = y = z = 0;
-                }
-    };
 
 Coordinate coordToGo, currentCoord;
 
 ros::Publisher *pub;
 
-/*
 bool equalCoord(Coordinate &a, Coordinate &b)
     {
         return fabs(a.x - b.x) < EPSILON && fabs(a.y - b.y) < EPSILON
                 && fabs(a.z - b.z) < EPSILON;
     }
-*/
+
 double coeff(double a, double b)
     {
         if(fabs(a-b) < EPSILON)
@@ -77,20 +67,25 @@ bool serverFunc(hectorquad::coordinate::Request &req, hectorquad::coordinate::Re
 
 void goPose()
     {
+        static int paramState = -1;
+        if (equalCoord(currentCoord, coordToGo) && paramState != 1)
+        {
+            ros::param::set("quadIdle", "1");
+            paramState = 1;
+        }
+        else if(paramState != 0)
+        {
+            paramState = 0;
+            ros::param::set("quadIdle", "0");
+        }
+        
         geometry_msgs::Twist msg;
         float distanceX = fabs(coordToGo.x - currentCoord.x);
         float distanceY = fabs(coordToGo.y - currentCoord.y);
         float distanceZ = fabs(coordToGo.z - currentCoord.z);
-        
         msg.linear.x = SPEED * distanceX / 2 * coeff(currentCoord.x, coordToGo.x);
         msg.linear.y = SPEED * distanceY / 2 * coeff(currentCoord.y, coordToGo.y);
         msg.linear.z = SPEED * distanceZ / 2 * coeff(currentCoord.z, coordToGo.z);
-         
-        /*
-        msg.linear.x = SPEED * distanceX * fabs(distanceX) / 15;
-        msg.linear.y = SPEED * distanceY * fabs(distanceY) / 15;
-        msg.linear.z = SPEED * distanceZ * fabs(distanceZ) / 15;
-        */
         pub->publish(msg);
         return;
     }
