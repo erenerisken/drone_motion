@@ -3,8 +3,8 @@
 #include <hectorquad/coordinate.h>
 #include <gazebo_msgs/ModelStates.h>
 
-#define EPSILON 0.5
-#define SPEED 1.5
+#define EPSILON 0.1
+#define SPEED 1
 #define QUADNAME "quadrotor"
 
 class Coordinate
@@ -21,6 +21,7 @@ class Coordinate
 Coordinate coordToGo, currentCoord;
 
 ros::Publisher *pub;
+
 /*
 bool equalCoord(Coordinate &a, Coordinate &b)
     {
@@ -77,9 +78,19 @@ bool serverFunc(hectorquad::coordinate::Request &req, hectorquad::coordinate::Re
 void goPose()
     {
         geometry_msgs::Twist msg;
-        msg.linear.x = SPEED * coeff(currentCoord.x, coordToGo.x);
-        msg.linear.y = SPEED * coeff(currentCoord.y, coordToGo.y);
-        msg.linear.z = SPEED * coeff(currentCoord.z, coordToGo.z);
+        float distanceX = fabs(coordToGo.x - currentCoord.x);
+        float distanceY = fabs(coordToGo.y - currentCoord.y);
+        float distanceZ = fabs(coordToGo.z - currentCoord.z);
+        
+        msg.linear.x = SPEED * distanceX / 2 * coeff(currentCoord.x, coordToGo.x);
+        msg.linear.y = SPEED * distanceY / 2 * coeff(currentCoord.y, coordToGo.y);
+        msg.linear.z = SPEED * distanceZ / 2 * coeff(currentCoord.z, coordToGo.z);
+         
+        /*
+        msg.linear.x = SPEED * distanceX * fabs(distanceX) / 15;
+        msg.linear.y = SPEED * distanceY * fabs(distanceY) / 15;
+        msg.linear.z = SPEED * distanceZ * fabs(distanceZ) / 15;
+        */
         pub->publish(msg);
         return;
     }

@@ -3,6 +3,7 @@ project(hectorquad)
 
 find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs message_generation gazebo_msgs)
 
+
 add_service_files(
   FILES
   coordinate.srv
