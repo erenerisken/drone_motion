@@ -8,6 +8,8 @@
 #include <queue>
 #include <stack>
 
+#define HEIGHT 0.4
+
 typedef std::vector<std::vector<int> > Matrix;
 typedef std::pair<int, int> intint;
 
@@ -181,7 +183,7 @@ namespace AStar
                         cur = routeStack.top();
                         routeStack.pop();
                         intint coord2 = indToCoord(cur);
-                        Coordinate tmp(xStart + stepSize * coord2.second, yStart + stepSize * coord2.first, h + 1.0);
+                        Coordinate tmp(xStart + stepSize * coord2.second, yStart + stepSize * coord2.first, h + HEIGHT);
                         h = 0;
                         route.push_back(tmp);
                     }

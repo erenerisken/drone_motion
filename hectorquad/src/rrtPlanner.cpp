@@ -29,7 +29,7 @@ void updatePositions(const gazebo_msgs::ModelStates &msg)
                 continue;
             }
             Coordinate tmpCoord(msg.pose[i].position.x, msg.pose[i].position.y, msg.pose[i].position.z);
-            Cylinder *tmp = new Cylinder(msg.name[i], tmpCoord, 1.0, 2.0);
+            Cylinder *tmp = new Cylinder(msg.name[i], tmpCoord, 0.5, 2.0);
             for (size_t j = 0; j < obstacles.size(); j++)
             {
                 if (*tmp == *obstacles[j])
