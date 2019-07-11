@@ -1,8 +1,0 @@
-prefix=/home/burak/droneTask/install
-
-Name: hectorquad
-Description: Description of hectorquad
-Version: 0.0.0
-Cflags: -I/home/burak/droneTask/install/include
-Libs: -L/home/burak/droneTask/install/lib 
-Requires: 

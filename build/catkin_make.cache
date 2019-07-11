@@ -1,2 +1,0 @@
-hectorquad
--DCATKIN_DEVEL_PREFIX=/home/burak/droneTask/devel -DCMAKE_INSTALL_PREFIX=/home/burak/droneTask/install -G Unix Makefiles
