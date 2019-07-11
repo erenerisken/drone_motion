@@ -48,7 +48,7 @@ namespace AStar
         void printMap()
             {
                 std::ofstream f;
-                f.open("/home/eren/Desktop/map.txt");
+                f.open("/home/burak/Desktop/map.txt");
                 f<<n<<" "<<m<<std::endl;
                 for (size_t i = 0; i < m; i++)
                 {

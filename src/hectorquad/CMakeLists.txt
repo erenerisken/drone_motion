@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(hectorquad)
 
+add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs message_generation gazebo_msgs std_srvs) 
 
 add_service_files(
