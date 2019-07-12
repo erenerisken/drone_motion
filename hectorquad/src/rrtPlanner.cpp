@@ -4,13 +4,17 @@
 #include <gazebo_msgs/ModelStates.h>
 #include <hectorquad/coordinate.h>
 #include <std_srvs/Empty.h>
+#include <geometry_msgs/Vector3.h>
 #include "AStar.hpp"
+
+#define INITIAL_HEIGHT 4.0
 
 std::vector<Obstacle*> obstacles;
 ros::ServiceClient *clientPtr;
 
 bool readyToPlan = false;
 std::vector<Coordinate> route;
+Coordinate curQuadPose;
 
 bool startPlanning(std_srvs::EmptyRequest &req, std_srvs::EmptyResponse &res)
     {
@@ -74,6 +78,17 @@ bool quadAvail()
         return true;
     }
 
+void callService(const Coordinate &c)
+    {
+        hectorquad::coordinateRequest req;
+        hectorquad::coordinateResponse res;
+        req.x = c.x;
+        req.y = c.y;
+        req.z = c.z;
+        clientPtr->call(req, res);
+        ROS_INFO_STREAM("Quad has been directed to "<<c);
+    }
+
 void visitPoints(std::vector<Coordinate> &v)
     {   
         if(!quadAvail())
@@ -86,13 +101,7 @@ void visitPoints(std::vector<Coordinate> &v)
                 return;
             }
         static int ind = 0;
-        hectorquad::coordinateRequest req;
-        hectorquad::coordinateResponse res;
-        req.x = v[ind].x;
-        req.y = v[ind].y;
-        req.z = v[ind].z;
-        clientPtr->call(req, res);
-        ROS_INFO_STREAM("Quad has been directed to "<<v[ind]);
+        callService(v[ind]);
         ind++;
         ind %= v.size();
         return;
@@ -117,6 +126,15 @@ void prepareMap()
         AStar::end = Coordinate(9.5,9.5,0);
         route = AStar::generateMap(obstacles, -10.0, 10.0, -10.0, 10.0, 0.1);
         AStar::printMap();
+        callService(Coordinate(curQuadPose.x, curQuadPose.y, INITIAL_HEIGHT));
+    }
+
+void getQuadPose(const geometry_msgs::Vector3 &msg)
+    {
+        curQuadPose.x = msg.x;
+        curQuadPose.y = msg.y;
+        curQuadPose.z = msg.z;
+        return;
     }
 
 int main(int argc, char* argv[])
@@ -124,6 +142,7 @@ int main(int argc, char* argv[])
         ros::init(argc, argv, "rrtPlanner");
         ros::NodeHandle nh;
         ros::Subscriber sub1 = nh.subscribe("gazebo/model_states", 1000, &updatePositions);
+        ros::Subscriber sub2 = nh.subscribe("quadPose", 1, &getQuadPose);
         ros::service::waitForService("quadGoPose");
         ros::ServiceClient client = nh.serviceClient<hectorquad::coordinate>("quadGoPose");
         ros::ServiceServer service = nh.advertiseService("startPlanning", &startPlanning);

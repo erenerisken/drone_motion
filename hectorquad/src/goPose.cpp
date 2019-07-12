@@ -2,16 +2,17 @@
 #include <geometry_msgs/Twist.h>
 #include <hectorquad/coordinate.h>
 #include <gazebo_msgs/ModelStates.h>
+#include <geometry_msgs/Vector3.h>
 #include "motionUtilities.hpp"
 
-#define EPSILON 0.4
-#define SPEED 1.0
+#define EPSILON 0.15
+#define SPEED 1.2
 #define QUADNAME "quadrotor"
 
 
 Coordinate coordToGo, currentCoord;
 
-ros::Publisher *pub;
+ros::Publisher *pubPtr1, *pubPtr2;
 double yaw;
 
 bool equalCoord(Coordinate &a, Coordinate &b)
@@ -93,9 +94,18 @@ void goPose()
         /*msg.angular.x = 0;
         msg.angular.y = 0;*/
         msg.angular.z = -yaw/8;
-        pub->publish(msg);
+        pubPtr1->publish(msg);
 
         return;
+    }
+
+void publishPose()
+    {
+        geometry_msgs::Vector3 msg;
+        msg.x = currentCoord.x;
+        msg.y = currentCoord.y;
+        msg.z = currentCoord.z;
+        pubPtr2->publish(msg);
     }
 
 int main(int argc, char* argv[])
@@ -106,13 +116,15 @@ int main(int argc, char* argv[])
     ros::ServiceServer server = nh.advertiseService("quadGoPose", &serverFunc);
     ros::Subscriber sub1 = nh.subscribe("gazebo/model_states", 1, &getPose);
     ros::Publisher pub1 = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
-    
-    pub = &pub1;
+    ros::Publisher pub2 = nh.advertise<geometry_msgs::Vector3>("quadPose", 1);
+    pubPtr1 = &pub1;
+    pubPtr2 = &pub2;
     ROS_INFO_STREAM("Subscribed.");
     while (ros::ok())
     {
         ros::spinOnce();
         goPose();
+        publishPose();
     }
     
     return 0;
