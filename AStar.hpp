@@ -22,7 +22,11 @@ namespace AStar
         Coordinate start, end;
         Matrix map;
         std::vector<Coordinate> findShortestAStar(double xStart, double xEnd, double yStart, double yEnd, double stepSize);
-        
+        void init(const Coordinate &startCoord, const Coordinate &endCoord)
+            {
+                start = startCoord;
+                end = endCoord;
+            }
         std::vector<Coordinate> generateMap(std::vector<Obstacle*> &obstacles, double xStart, double xEnd, double yStart, double yEnd, double stepSize)
             {
                 step = stepSize;

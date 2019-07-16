@@ -131,8 +131,7 @@ void prepareMap()
         ROS_WARN_STREAM("Preparing map");
         if(plannerType == ASTAR)
             {
-                AStar::start = Coordinate(-10.0,-10.0,0);
-                AStar::end = Coordinate(9.5,9.5,0);
+                AStar::init(Coordinate(-10.0,-10.0,0), Coordinate(9.5,9.5,0));
                 route = AStar::generateMap(obstacles, -10.0, 10.0, -10.0, 10.0, 0.1);
                 AStar::printMap();
             }
