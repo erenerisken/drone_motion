@@ -9,12 +9,19 @@
 
 #define INITIAL_HEIGHT 4.0
 
+enum PlannerType
+    {
+        RRT, ASTAR
+    };
+
 std::vector<Obstacle*> obstacles;
 ros::ServiceClient *clientPtr;
 
 bool readyToPlan = false;
 std::vector<Coordinate> route;
 Coordinate curQuadPose;
+
+PlannerType plannerType = ASTAR;
 
 bool startPlanning(std_srvs::EmptyRequest &req, std_srvs::EmptyResponse &res)
     {
@@ -95,7 +102,7 @@ void visitPoints(std::vector<Coordinate> &v)
             {
                 return;
             }
-        if (obstacles.size() <= 0)
+        if (v.size() <= 0)
             {
                 ROS_WARN_STREAM_ONCE("No route available.");
                 return;
@@ -122,10 +129,17 @@ void prepareMap()
             }
         planned = true;
         ROS_WARN_STREAM("Preparing map");
-        AStar::start = Coordinate(-10.0,-10.0,0);
-        AStar::end = Coordinate(9.5,9.5,0);
-        route = AStar::generateMap(obstacles, -10.0, 10.0, -10.0, 10.0, 0.1);
-        AStar::printMap();
+        if(plannerType == ASTAR)
+            {
+                AStar::start = Coordinate(-10.0,-10.0,0);
+                AStar::end = Coordinate(9.5,9.5,0);
+                route = AStar::generateMap(obstacles, -10.0, 10.0, -10.0, 10.0, 0.1);
+                AStar::printMap();
+            }
+        else if(plannerType == RRT)
+            {
+                
+            }
         callService(Coordinate(curQuadPose.x, curQuadPose.y, INITIAL_HEIGHT));
     }
 

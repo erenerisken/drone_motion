@@ -5,11 +5,11 @@
 #include <vector>
 #include <fstream>
 #include "motionUtilities.hpp"
+#include "planningUtilities.hpp"
 #include <queue>
 #include <stack>
 
 #define HEIGHT 0.4
-#define SLOPE_EPSILON 0.05 //Stable value 0.01
 
 typedef std::vector<std::vector<int> > Matrix;
 typedef std::pair<int, int> intint;
@@ -22,35 +22,7 @@ namespace AStar
         Coordinate start, end;
         Matrix map;
         std::vector<Coordinate> findShortestAStar(double xStart, double xEnd, double yStart, double yEnd, double stepSize);
-        bool isLinear(const Coordinate &a, const Coordinate &b, const Coordinate &c)
-            {
-                double slope1 = a.x == b.x ? -999.0 : (b.y - a.y) / (b.x - a.x);
-                double slope2 = b.x == c.x ? -999.0 : (c.y - b.y) / (c.x - b.x);
-                return fabs(slope2 - slope1) < SLOPE_EPSILON;
-            }
-        std::vector<Coordinate> filterCoordinates(const std::vector<Coordinate> &route)
-            {
-                if(route.size() < 3)
-                    return route;
-                std::vector<Coordinate> ret;
-                size_t i=0, j=1, k=2;
-                for(k = 2; k<route.size(); k++)
-                    {
-                        if(isLinear(route[i], route[j], route[k]))
-                            {
-                                j = k;
-                            }
-                        else
-                            {
-                                ret.push_back(route[i]);
-                                ret.push_back(route[j]);
-                                i = j;
-                                j = k;
-                            }
-                    }
-                ret.push_back(route[route.size()-1]);
-                return ret;
-            }
+        
         std::vector<Coordinate> generateMap(std::vector<Obstacle*> &obstacles, double xStart, double xEnd, double yStart, double yEnd, double stepSize)
             {
                 step = stepSize;
@@ -85,7 +57,7 @@ namespace AStar
                 destPos.first = (end.y - yStart) / stepSize;
                 destPos.second = (end.x - xStart) / stepSize;
                 ROS_INFO_STREAM(n << "x" << m << "map generated");
-                return filterCoordinates(findShortestAStar(xStart, xEnd, yStart, yEnd, stepSize));
+                return planningUtilities::filterCoordinates(findShortestAStar(xStart, xEnd, yStart, yEnd, stepSize));
             }
         void printMap()
             {
@@ -178,22 +150,7 @@ namespace AStar
                                             }
                                     }
                             }
-                        /*cout<<"Su anki node "<<y<<" "<<x<<" f score = "<<fScore<<endl;
-                        for(int i = 0; i<n; i++)
-                            {
-                                for(int j = 0; j<m; j++)
-                                    printf("%3d ",map[i][j] ? 0 : minimumDist[coordToInd(intint(i,j))].first);
-                                cout<<endl;
-                            }
-                        cout<<"-----------------------------"<<endl;*/
                     }
-                /*for(int i = 0; i<n; i++)
-                    {
-                        for(int j = 0; j<m; j++)
-                            printf("%3d ",minimumDist[coordToInd(intint(i,j))].first);
-                        cout<<endl;
-                    }
-                */
                 return minimumDist;
             }
         std::vector<Coordinate> findShortestAStar(double xStart, double xEnd, double yStart, double yEnd, double stepSize)
