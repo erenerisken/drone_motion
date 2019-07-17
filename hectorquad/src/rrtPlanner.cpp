@@ -6,8 +6,8 @@
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/Vector3.h>
 #include "AStar.hpp"
-
-#define INITIAL_HEIGHT 4.0
+#include "Rrt.hpp"
+#include "planningUtilities.hpp"
 
 enum PlannerType
     {
@@ -21,7 +21,7 @@ bool readyToPlan = false;
 std::vector<Coordinate> route;
 Coordinate curQuadPose;
 
-PlannerType plannerType = ASTAR;
+PlannerType plannerType = RRT;
 
 bool startPlanning(std_srvs::EmptyRequest &req, std_srvs::EmptyResponse &res)
     {
@@ -137,7 +137,8 @@ void prepareMap()
             }
         else if(plannerType == RRT)
             {
-                
+                Rrt::init(Coordinate(-10.0, -10.0, 0.4), Coordinate(10.0, 10.0, 0.4), 0.1, obstacles);
+                route = Rrt::rrtGetMap(-10.0, 10.0, -10.0, 10.0);
             }
         callService(Coordinate(curQuadPose.x, curQuadPose.y, INITIAL_HEIGHT));
     }

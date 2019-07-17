@@ -3,7 +3,12 @@
 
 #include <vector>
 
-#define SLOPE_EPSILON 0.05 //Stable value 0.01
+#define INITIAL_HEIGHT 4.0
+#define SLOPE_EPSILON 0.54 //Stable value 0.01
+#define HEIGHT 0.4
+
+typedef std::vector<std::vector<int> > Matrix;
+typedef std::pair<int, int> intint;
 
 namespace planningUtilities
     {
@@ -12,6 +17,15 @@ namespace planningUtilities
                 double slope1 = a.x == b.x ? -999.0 : (b.y - a.y) / (b.x - a.x);
                 double slope2 = b.x == c.x ? -999.0 : (c.y - b.y) / (c.x - b.x);
                 return fabs(slope2 - slope1) < SLOPE_EPSILON;
+            }
+        double dist(const Coordinate &c1, const Coordinate &c2)
+            {
+                return sqrt(pow(c1.x - c2.x, 2) + pow(c1.y - c2.y, 2) + pow(c1.z - c2.z, 2));
+            }
+        int dist(intint c1, intint c2)
+            {
+                //return abs(c1.second - c2.second) + abs(c1.first - c2.first);
+                return (int)sqrt(pow((c1.second - c2.second),2) + pow((c1.first - c2.first) ,2));
             }
         std::vector<Coordinate> filterCoordinates(const std::vector<Coordinate> &route)
             {

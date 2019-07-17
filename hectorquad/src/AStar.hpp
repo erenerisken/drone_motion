@@ -9,10 +9,6 @@
 #include <queue>
 #include <stack>
 
-#define HEIGHT 0.4
-
-typedef std::vector<std::vector<int> > Matrix;
-typedef std::pair<int, int> intint;
 
 namespace AStar
     {
@@ -95,11 +91,7 @@ namespace AStar
                         coord.first<n && coord.second < m;
             }
 
-        int dist(intint c1, intint c2)
-            {
-                //return abs(c1.second - c2.second) + abs(c1.first - c2.first);
-                return (int)sqrt(pow((c1.second - c2.second),2) + pow((c1.first - c2.first) ,2));
-            }
+        
         std::vector<intint> findShortestAStarCore()
             {
                 std::priority_queue<intint, std::vector<intint>, std::greater<intint> > q; // first = dist, second = nodeIndex
@@ -148,7 +140,7 @@ namespace AStar
                                                 if(!visited[indAdj])
                                                     {
                                                         //cout<<i->first<<" "<<i->second<<" ekleniyor dist = "<<dist(destPos, *i)<<endl;
-                                                        q.push(intint(minimumDist[indAdj].first + dist(destPos, *i), indAdj));
+                                                        q.push(intint(minimumDist[indAdj].first + planningUtilities::dist(destPos, *i), indAdj));
                                                         visited[indAdj] = 1;
                                                     }
                                             }
