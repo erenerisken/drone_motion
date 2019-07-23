@@ -52,7 +52,7 @@ namespace Rrt
                                         closestEndPoint = endNodes[i].first;
                                     }
                             }
-                        //Inbound unutma
+                            
                         double magStart = std::min(stepSize, planningUtilities::dist(closestStartPoint, randomPoint));
                         double magEnd = std::min(stepSize, planningUtilities::dist(closestEndPoint, randomPoint));
                         double newStartX = closestStartPoint.x + magStart * (randomPoint.x - closestStartPoint.x) / planningUtilities::dist(closestStartPoint, randomPoint);
@@ -108,5 +108,6 @@ namespace Rrt
             }
         
     }
+
 
 #endif

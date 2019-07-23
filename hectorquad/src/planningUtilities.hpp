@@ -2,6 +2,7 @@
 #define _PLANNINGUTILITIES_HPP_
 
 #include <vector>
+#include "motionUtilities.hpp"
 
 #define INITIAL_HEIGHT 4.0
 #define SLOPE_EPSILON 0.54 //Stable value 0.01
@@ -9,6 +10,9 @@
 
 typedef std::vector<std::vector<int> > Matrix;
 typedef std::pair<int, int> intint;
+
+
+
 
 namespace planningUtilities
     {
