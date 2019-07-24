@@ -7,7 +7,7 @@
 #include <stack>
 
 #define REWIRERADIUS 0.45 //fix later
-#define MAXLOOP 10000 //100K iteration . dont try this at home 
+#define MAXLOOP 30000 //100K iteration . dont try this at home 
 
 class RrtStarNode
         {
@@ -102,9 +102,17 @@ namespace Rrt_star
                                 //Reconnecting the graph wrt g values
                                 for(int i = 0; i < startVertices.size(); i++)
                                     {
+                                        bool isEdgeOK = true;
                                         double distance = planningUtilities::dist(startVertices[i].coord, newStart);
                                         if( distance <= REWIRERADIUS && (distance + startVertices[i].g) < newStartNode.g )
                                             {
+                                                for(auto j = obs->begin(); j != obs->end(); j++)
+                                                    {
+                                                        if(does_sep(newStart, startVertices[i].coord, (*j)->coord.x, (*j)->coord.y, 0.5))
+                                                        isEdgeOK = false;
+                                                    }
+                                                if(!isEdgeOK)
+                                                    continue;
                                                 newStartNode.parentInd = i;
                                                 newStartNode.g = distance + startVertices[i].g;
                                             }
@@ -117,9 +125,17 @@ namespace Rrt_star
                                 //Reconnecting the graph wrt g values
                                 for(int i = 0; i < endVertices.size(); i++)
                                     {
+                                        bool isEdgeOK = true;
                                         double distance = planningUtilities::dist(endVertices[i].coord, newEnd);
                                         if( distance <= REWIRERADIUS && (distance + endVertices[i].g) < newEndNode.g )
                                             {
+                                                for(auto j = obs->begin(); j != obs->end(); j++)
+                                                    {
+                                                        if(does_sep(newEnd, endVertices[i].coord, (*j)->coord.x, (*j)->coord.y, 0.5))
+                                                        isEdgeOK = false;
+                                                    }
+                                                if(!isEdgeOK)
+                                                    continue;
                                                 newEndNode.parentInd = i;
                                                 newEndNode.g = distance + endVertices[i].g;
                                             }
@@ -224,8 +240,16 @@ namespace Rrt_star
                                 for(int i = 0; i < startVertices.size()-1; i++)
                                 {
                                     double distance = planningUtilities::dist(startVertices[i].coord, newStart);
+                                    bool isEdgeOK = true;
                                     if( distance <= REWIRERADIUS && (distance + startVertices[i].g) < newStartNode.g)
                                         {
+                                            for(auto j = obs->begin(); j != obs->end(); j++)
+                                                {
+                                                    if(does_sep(newStart, startVertices[i].coord, (*j)->coord.x, (*j)->coord.y, 0.5))
+                                                        isEdgeOK = false;
+                                                }
+                                            if(!isEdgeOK)
+                                                    continue;
                                             newStartNode.parentInd = i;
                                             newStartNode.g = distance + startVertices[i].g;
                                             ROS_INFO_STREAM("RRT* worked at the loop: " + std::to_string(MAXLOOP - loop));
@@ -251,6 +275,7 @@ namespace Rrt_star
                 std::vector<Coordinate> ret;
                 int cur = startTreeInd;
                 ROS_WARN_STREAM("The shortest path end node is " + std::to_string(startTreeInd));
+                ROS_ERROR_STREAM("The shortest path length is " + std::to_string(startVertices[startTreeInd].g));
                 while(cur != -1)
                     {
                         s.push(startVertices[cur].coord);
@@ -264,6 +289,7 @@ namespace Rrt_star
                 ret[0].z += INITIAL_HEIGHT;
                 ROS_WARN_STREAM("func is done");
                 ROS_WARN_STREAM("End point was used as random:" + std::to_string(counter));
+                //ROS_WARN_STREAM("Tried but can not wired edges:" + std::to_string(notWired));
                 return planningUtilities::filterCoordinates(ret);
             }
         

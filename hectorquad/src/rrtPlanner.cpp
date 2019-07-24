@@ -22,7 +22,8 @@ bool readyToPlan = false;
 std::vector<Coordinate> route;
 Coordinate curQuadPose;
 
-PlannerType plannerType = RRTSTARONE;
+PlannerType plannerType = RRTSTAR
+;
 
 bool startPlanning(std_srvs::EmptyRequest &req, std_srvs::EmptyResponse &res)
     {
@@ -152,7 +153,7 @@ void prepareMap()
             {
                 Rrt_star::init(Coordinate(-10.0, -10.0, 0.4), Coordinate(10.0, 10.0, 0.4), 0.1, obstacles);
                 ROS_WARN_STREAM("Map is ready");
-                route = Rrt_star::rrtGetMap(-10.0, 10.0, -10.0, 10.0);    
+                route = Rrt_star::rrtGetMapOne(-10.0, 10.0, -10.0, 10.0);    
             }
         callService(Coordinate(curQuadPose.x, curQuadPose.y, INITIAL_HEIGHT));
     }
