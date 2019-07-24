@@ -4,9 +4,10 @@
 #include <vector>
 #include "motionUtilities.hpp"
 
-#define INITIAL_HEIGHT 4.0
-#define SLOPE_EPSILON 0.54 //Stable value 0.01
-#define HEIGHT 0.4
+#define INITIAL_HEIGHT 4.0 //not to hit object while going to start point
+#define SLOPE_EPSILON 0.79 //Stable value 0.54 - 30 deg // 1.04 - 60 deg
+#define HEIGHT 0.4  //from ground
+#define PROBABILITY 0.07 // puts A* magic into RRT*
 
 typedef std::vector<std::vector<int> > Matrix;
 typedef std::pair<int, int> intint;
@@ -16,6 +17,8 @@ typedef std::pair<int, int> intint;
 
 namespace planningUtilities
     {
+        //TODO : check for line obstacle collision.(To avoid add edge passes through an object, as rewiring)
+
         bool isLinear(const Coordinate &a, const Coordinate &b, const Coordinate &c)
             {
                 double slope1 = a.x == b.x ? -999.0 : (b.y - a.y) / (b.x - a.x);

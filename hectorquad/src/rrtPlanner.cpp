@@ -12,7 +12,7 @@
 
 enum PlannerType
     {
-        RRT, ASTAR, RRTSTAR
+        RRT, ASTAR, RRTSTAR, RRTSTARONE
     };
 
 std::vector<Obstacle*> obstacles;
@@ -22,7 +22,7 @@ bool readyToPlan = false;
 std::vector<Coordinate> route;
 Coordinate curQuadPose;
 
-PlannerType plannerType = RRTSTAR;
+PlannerType plannerType = RRTSTARONE;
 
 bool startPlanning(std_srvs::EmptyRequest &req, std_srvs::EmptyResponse &res)
     {
@@ -139,13 +139,20 @@ void prepareMap()
         else if(plannerType == RRT)
             {
                 Rrt::init(Coordinate(-10.0, -10.0, 0.4), Coordinate(10.0, 10.0, 0.4), 0.1, obstacles);
+                ROS_WARN_STREAM("Map is ready");
                 route = Rrt::rrtGetMap(-10.0, 10.0, -10.0, 10.0);
             }
         else if(plannerType == RRTSTAR)
             {
                 Rrt_star::init(Coordinate(-10.0, -10.0, 0.4), Coordinate(10.0, 10.0, 0.4), 0.1, obstacles);
                 ROS_WARN_STREAM("Map is ready");
-                route = Rrt_star::rrtGetMapOne(-10.0, 10.0, -10.0, 10.0);
+                route = Rrt_star::rrtGetMap(-10.0, 10.0, -10.0, 10.0);
+            }
+        else if(plannerType == RRTSTARONE)
+            {
+                Rrt_star::init(Coordinate(-10.0, -10.0, 0.4), Coordinate(10.0, 10.0, 0.4), 0.1, obstacles);
+                ROS_WARN_STREAM("Map is ready");
+                route = Rrt_star::rrtGetMap(-10.0, 10.0, -10.0, 10.0);    
             }
         callService(Coordinate(curQuadPose.x, curQuadPose.y, INITIAL_HEIGHT));
     }

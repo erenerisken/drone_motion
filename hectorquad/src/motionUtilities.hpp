@@ -5,7 +5,7 @@
 #include <iostream>
 
 #define FLOAT_EPSILON 0.001
-#define CLEARENCE 0.7
+#define CLEARENCE 0.7 //(Coursera: Motion planning lecture)
 
 bool equalFloat(double a, double b)
     {
