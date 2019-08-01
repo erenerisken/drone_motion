@@ -57,12 +57,14 @@ namespace AStar
                 destPos.first = (end.y - yStart) / stepSize;
                 destPos.second = (end.x - xStart) / stepSize;
                 ROS_INFO_STREAM(n << "x" << m << "map generated");
-                return planningUtilities::filterCoordinates(findShortestAStar(xStart, xEnd, yStart, yEnd, stepSize));
+                std::vector<Coordinate> route = findShortestAStar(xStart, xEnd, yStart, yEnd, stepSize);
+                route = planningUtilities::filterCoordinates(route, &obstacles);
+                return route;
             }
         void printMap()
             {
                 std::ofstream f;
-                f.open("/home/eren/Desktop/map.txt");
+                f.open("/home/burak/Desktop/map.txt");
                 f<<n<<" "<<m<<std::endl;
                 for (size_t i = 0; i < m; i++)
                 {

@@ -104,7 +104,8 @@ namespace Rrt
                         cur = endNodes[cur].second;
                     }
                 ret[0].z += INITIAL_HEIGHT;
-                return planningUtilities::filterCoordinates(ret);
+                ret = planningUtilities::filterCoordinates(ret, obs);
+                return ret;
             }
         
     }

@@ -54,6 +54,7 @@ namespace Rrt_star
                         RrtStarNode closestStartPoint(startVertices[0].coord, startVertices[0].parentInd, startVertices[0].g, startVertices[0].lmc);
                         RrtStarNode closestEndPoint(endVertices[0].coord, endVertices[0].parentInd, endVertices[0].g, endVertices[0].lmc);
                         
+                        if(loop%100 == 0) ROS_WARN_STREAM("remaining loop #:" + std::to_string(loop));
                         //finding the closest node
                         for(int i = 1; i<startVertices.size(); i++)
                             {
@@ -144,6 +145,7 @@ namespace Rrt_star
                             }
                         if(inBoundStart || inBoundStart)
                             {
+                                loop--;
                                 continue;
                             }
 
@@ -163,7 +165,8 @@ namespace Rrt_star
                 
                 std::stack<Coordinate> s;
                 std::vector<Coordinate> ret;
-
+                ROS_WARN_STREAM("The shortest path end node is " + std::to_string(startTreeInd));
+                ROS_ERROR_STREAM("The shortest path length is " + std::to_string(startVertices[startTreeInd].g));
                 int cur = startTreeInd;
                 while(cur != -1)
                     {
@@ -182,7 +185,8 @@ namespace Rrt_star
                         cur = endVertices[cur].parentInd;
                     }
                 ret[0].z += INITIAL_HEIGHT;
-                return planningUtilities::filterCoordinates(ret);
+                ret = planningUtilities::filterCoordinates(ret, obs);
+                return ret;
             }
 
     //--------------------------- ONE TREE VERSION -----------------------------------//
@@ -198,6 +202,7 @@ namespace Rrt_star
                 Coordinate randomPoint(0.0, 0.0, HEIGHT);
                 while(loop > 0)
                     {
+                        ROS_WARN_STREAM(loop);
                         double probability = (double) rand() / (double) RAND_MAX;
                         if(probability < PROBABILITY)
                             {
@@ -257,15 +262,18 @@ namespace Rrt_star
                                 }
                                 startVertices.push_back(newStartNode);
                             }
+                        
+                        
                         if(inBoundStart)
                             {
+                                loop--;
                                 continue;
                             }
                         if(planningUtilities::dist(newStart, end) < stepSize * 10 && minCost > (newStartNode.g + planningUtilities::dist(newStart, end)))
                             {
                                 startTreeInd = startVertices.size()-1;
                                 minCost = newStartNode.g + planningUtilities::dist(newStart, end);
-                                ROS_WARN_STREAM("New min cost is: " + std::to_string(minCost));
+                                ROS_ERROR_STREAM("New min cost is: " + std::to_string(minCost));
                                 ROS_INFO_STREAM("Change made in loop: " + std::to_string(MAXLOOP - loop));
                             }
                         loop--;
@@ -290,9 +298,11 @@ namespace Rrt_star
                 ROS_WARN_STREAM("func is done");
                 ROS_WARN_STREAM("End point was used as random:" + std::to_string(counter));
                 //ROS_WARN_STREAM("Tried but can not wired edges:" + std::to_string(notWired));
-                return planningUtilities::filterCoordinates(ret);
+                //ret = planningUtilities::filterCoordinates(ret, obs);
+                //return planningUtilities::filterCoordinates(ret);
+                return ret;
             }
-        
+
     }
 
 

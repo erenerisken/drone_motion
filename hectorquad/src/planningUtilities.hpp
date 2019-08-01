@@ -34,17 +34,25 @@ namespace planningUtilities
                 //return abs(c1.second - c2.second) + abs(c1.first - c2.first);
                 return (int)sqrt(pow((c1.second - c2.second),2) + pow((c1.first - c2.first) ,2));
             }
-        std::vector<Coordinate> filterCoordinates(const std::vector<Coordinate> &route)
+        std::vector<Coordinate> filterCoordinates(std::vector<Coordinate> &route, std::vector<Obstacle*> *obs)
             {
+                bool nfree2move = false;
                 if(route.size() < 3)
                     return route;
                 std::vector<Coordinate> ret;
                 size_t i=0, j=1, k=2;
                 for(k = 2; k<route.size(); k++)
                     {
+                        nfree2move = false;
                         if(isLinear(route[i], route[j], route[k]))
                             {
-                                j = k;
+                                for(int i = 0; i < obs->size(); i++)
+                                    {
+                                        nfree2move = does_sep(route[i], route[j], (*obs)[i]->coord.x, (*obs)[i]->coord.y, 0.5);
+                                        if(nfree2move)break;
+                                    }
+                                if(!nfree2move)
+                                    j = k;
                             }
                         else
                             {

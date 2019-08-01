@@ -9,6 +9,8 @@
 #include "Rrt.hpp"
 #include "planningUtilities.hpp"
 #include "rrt_star.hpp"
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 enum PlannerType
     {
@@ -22,8 +24,7 @@ bool readyToPlan = false;
 std::vector<Coordinate> route;
 Coordinate curQuadPose;
 
-PlannerType plannerType = RRTSTAR
-;
+PlannerType plannerType = RRTSTARONE;
 
 bool startPlanning(std_srvs::EmptyRequest &req, std_srvs::EmptyResponse &res)
     {
@@ -145,13 +146,13 @@ void prepareMap()
             }
         else if(plannerType == RRTSTAR)
             {
-                Rrt_star::init(Coordinate(-10.0, -10.0, 0.4), Coordinate(10.0, 10.0, 0.4), 0.1, obstacles);
+                Rrt_star::init(Coordinate(0.0, 0.0, 0.4), Coordinate(10.0, 10.0, 0.4), 0.1, obstacles);
                 ROS_WARN_STREAM("Map is ready");
                 route = Rrt_star::rrtGetMap(-10.0, 10.0, -10.0, 10.0);
             }
         else if(plannerType == RRTSTARONE)
             {
-                Rrt_star::init(Coordinate(-10.0, -10.0, 0.4), Coordinate(10.0, 10.0, 0.4), 0.1, obstacles);
+                Rrt_star::init(Coordinate(0.0, 0.0, 0.4), Coordinate(10.0, 10.0, 0.4), 0.1, obstacles);
                 ROS_WARN_STREAM("Map is ready");
                 route = Rrt_star::rrtGetMapOne(-10.0, 10.0, -10.0, 10.0);    
             }
@@ -166,6 +167,7 @@ void getQuadPose(const geometry_msgs::Vector3 &msg)
         return;
     }
 
+
 int main(int argc, char* argv[])
     {
         ros::init(argc, argv, "rrtPlanner");
@@ -176,14 +178,79 @@ int main(int argc, char* argv[])
         ros::ServiceClient client = nh.serviceClient<hectorquad::coordinate>("quadGoPose");
         ros::ServiceServer service = nh.advertiseService("startPlanning", &startPlanning);
         clientPtr = &client;
+        ros::Rate r(1);
+        ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+        ros::Publisher markerArray_pub = nh.advertise<visualization_msgs::MarkerArray>("visualization_marker_array",1);
+        visualization_msgs::MarkerArray obsArray;
+        visualization_msgs::Marker points, line_strip, cylinder;
+        points.type = visualization_msgs::Marker::POINTS;
+        line_strip.type = visualization_msgs::Marker::LINE_STRIP;
+        cylinder.type = visualization_msgs::Marker::CYLINDER;
+
+        
+        bool drawed = false;
+       
         while(ros::ok())
             {
+                cylinder.header.frame_id = points.header.frame_id = line_strip.header.frame_id = "/world";
+                cylinder.header.stamp = points.header.stamp = line_strip.header.stamp = ros::Time::now();
+                cylinder.ns = "cylinders";
+                points.ns = line_strip.ns = "points_and_lines";
+                cylinder.action = points.action = line_strip.action = visualization_msgs::Marker::ADD;
+                cylinder.pose.orientation.w = points.pose.orientation.w = line_strip.pose.orientation.w = 1.0;
+
+                points.id = 0;
+                line_strip.id = 1;
+
+                cylinder.scale.x = 1.0;
+                cylinder.scale.y = 1.0;
+                cylinder.scale.z = 2.0;
+
+                points.scale.x = 0.2;
+                points.scale.y = 0.2;
+
+                line_strip.scale.x = 0.1;
+
+                cylinder.color.r = 1.0f;
+                cylinder.color.a = 1.0;
+
+                points.color.g = 1.0f;
+                points.color.a = 1.0;
+
+                line_strip.color.b = 1.0;
+                line_strip.color.a = 1.0;
+
+            
+                obsArray.markers.resize(obstacles.size());
+                for(int i = 0; i < obstacles.size(); i++)
+                    {
+                        cylinder.id = 2 + i;
+                        cylinder.pose.position.x = obstacles[i]->coord.x;
+                        cylinder.pose.position.y = obstacles[i]->coord.y;
+                        cylinder.pose.position.z = obstacles[i]->coord.z;
+                        obsArray.markers[i] = cylinder;
+                    }
+                markerArray_pub.publish(obsArray);
                 ros::spinOnce();
                 prepareMap();
-                if (route.size() > 0)
-                {
-                    visitPoints(route);
+                if (!drawed && route.size() > 0)
+                { 
+                    for(int i = 1; i < route.size(); i++)
+                    {
+                        geometry_msgs::Point p;
+                        p.x = route[i].x;
+                        p.y = route[i].y;
+                        p.z = route[i].z;
+
+                        points.points.push_back(p);
+                        line_strip.points.push_back(p);
+                    }
+                    marker_pub.publish(points);
+                    marker_pub.publish(line_strip);
+                    drawed = true;
                 }
+                
+                visitPoints(route);
             }
         clearMemory();
     }
