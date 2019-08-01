@@ -7,7 +7,7 @@
 #include <stack>
 
 #define REWIRERADIUS 0.45 //fix later
-#define MAXLOOP 30000 //100K iteration . dont try this at home 
+#define MAXLOOP 10000 //100K iteration . dont try this at home 
 
 class RrtStarNode
         {
@@ -43,7 +43,7 @@ namespace Rrt_star
                 bool finished = false;
                 double minCost = 9999;
                 int loop = MAXLOOP; 
-                int startTreeInd, endTreeInd;
+                int startTreeInd = 0, endTreeInd = 0;
 
                 while(loop > 0)
                     {
@@ -202,7 +202,7 @@ namespace Rrt_star
                 Coordinate randomPoint(0.0, 0.0, HEIGHT);
                 while(loop > 0)
                     {
-                        ROS_WARN_STREAM(loop);
+                        if(loop%100 == 0) ROS_WARN_STREAM("remaining loop #:" + std::to_string(loop));
                         double probability = (double) rand() / (double) RAND_MAX;
                         if(probability < PROBABILITY)
                             {
@@ -299,7 +299,6 @@ namespace Rrt_star
                 ROS_WARN_STREAM("End point was used as random:" + std::to_string(counter));
                 //ROS_WARN_STREAM("Tried but can not wired edges:" + std::to_string(notWired));
                 //ret = planningUtilities::filterCoordinates(ret, obs);
-                //return planningUtilities::filterCoordinates(ret);
                 return ret;
             }
 

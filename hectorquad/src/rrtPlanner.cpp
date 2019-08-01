@@ -11,10 +11,11 @@
 #include "rrt_star.hpp"
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
+#include "rrt_sharp.hpp"
 
 enum PlannerType
     {
-        RRT, ASTAR, RRTSTAR, RRTSTARONE
+        RRT, ASTAR, RRTSTAR, RRTSTARONE, RRTSHARP
     };
 
 std::vector<Obstacle*> obstacles;
@@ -155,6 +156,12 @@ void prepareMap()
                 Rrt_star::init(Coordinate(0.0, 0.0, 0.4), Coordinate(10.0, 10.0, 0.4), 0.1, obstacles);
                 ROS_WARN_STREAM("Map is ready");
                 route = Rrt_star::rrtGetMapOne(-10.0, 10.0, -10.0, 10.0);    
+            }
+        else if(plannerType == RRTSHARP)
+            {
+                Rrt_sharp::init(Coordinate(0.0, 0.0, 0.4), Coordinate(10.0, 10.0, 0.4), 0.1, obstacles);
+                ROS_WARN_STREAM("Map is ready");
+                route = Rrt_sharp::getMap(-10.0, 10.0, -10.0, 10.0);    
             }
         callService(Coordinate(curQuadPose.x, curQuadPose.y, INITIAL_HEIGHT));
     }
