@@ -257,7 +257,7 @@ int main(int argc, char* argv[])
                     drawed = true;
                 }
                 
-                visitPoints(route);
+                //visitPoints(route);
             }
         clearMemory();
     }

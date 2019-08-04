@@ -8,7 +8,7 @@
 #include <ros/ros.h>
 
 #define REWIRERADIUS 0.45 //fix later
-#define MAXLOOP1 10000 //100K iteration . dont try this at home 
+#define MAXLOOP1 30000 //100K iteration . dont try this at home 
 
 
 class rrtSharpNode 
@@ -16,11 +16,11 @@ class rrtSharpNode
         public:
             Coordinate coord;
             int parent;
-            int index;
+            int ind;
             double g, lmc, key;
 
-            rrtSharpNode(Coordinate c, int p, double g, double lmc, double key, int ind): coord(c), parent(p), g(g), lmc(lmc), key(key), index(ind) {}
-            rrtSharpNode(const rrtSharpNode& rhs):coord(rhs.coord), parent(rhs.parent), g(rhs.g), lmc(rhs.lmc), key(rhs.key) {}
+            rrtSharpNode(const Coordinate c, const int p, const double g, const double lmc, const double key,  const int ind) : coord(c), parent(p), g(g), lmc(lmc), key(key),  ind(ind) {}
+            rrtSharpNode(const rrtSharpNode& rhs):coord(rhs.coord), parent(rhs.parent), g(rhs.g), lmc(rhs.lmc), key(rhs.key), ind(rhs.ind) {}
             bool operator>(const rrtSharpNode& rhs)const
             {   
                 return (this->key > rhs.key);
@@ -49,8 +49,10 @@ namespace Rrt_sharp
                 endPoint = endCoord;
                 obs = &obstacles;
                 stepSize = step;
-                rrtSharpNode startNode(Coordinate(startPoint.x, startPoint.y, startPoint.z), -1, 0, 0, 0, 0);
+                Coordinate c1(startPoint.x, startPoint.y, startPoint.z);
+                rrtSharpNode startNode(c1, -1, 0.0, 0.0, 0.0, 0);
                 vertices.push_back(startNode);
+                
             }
         std::vector<Coordinate> getMap(double xS, double xE, double yS, double yE)
             {
@@ -86,7 +88,7 @@ namespace Rrt_sharp
                         // ------------ Extend phase --------//
                         // Find Closest
                         int closest = 0;
-                        rrtSharpNode closestPoint(vertices[0].coord, vertices[0].parent, vertices[0].g, vertices[0].lmc, vertices[0].key, vertices[0].index);
+                        rrtSharpNode closestPoint(vertices[0]);
                         for(int i = 1; i<vertices.size(); i++)
                             {
                                 if(planningUtilities::dist(vertices[i].coord, randomPoint) < planningUtilities::dist(closestPoint.coord, randomPoint))
@@ -118,16 +120,16 @@ namespace Rrt_sharp
                         
                         if(!inBound)
                             {
-                                rrtSharpNode newNode(newNodeCoord, closest, INFINITY, closestPoint.lmc + mag, closestPoint.lmc + mag + planningUtilities::dist(newNodeCoord, endPoint), indCounter);
-                                for(int i = 0; i < vertices.size()-1; i++)
+                                rrtSharpNode newNode(newNodeCoord, closest, INFINITY, closestPoint.g + mag, closestPoint.g + mag + planningUtilities::dist(newNodeCoord, endPoint), indCounter);
+                                for(int i = 0; i < vertices.size(); i++)
                                 {
                                     double distance = planningUtilities::dist(vertices[i].coord, newNodeCoord);
                                     bool isEdgeOK = true;
-                                    if( distance <= REWIRERADIUS && (distance + vertices[i].g) < newNode.g)
+                                    if( distance <= REWIRERADIUS && (distance + vertices[i].g) < newNode.lmc)
                                         {
                                             for(auto j = obs->begin(); j != obs->end(); j++)
                                                 {
-                                                    if(does_sep(newNodeCoord, vertices[i].coord, (*j)->coord.x, (*j)->coord.y, 0.5))
+                                                    if(!does_sep(newNodeCoord, vertices[i].coord, (*j)->coord.x, (*j)->coord.y, 1.2))
                                                         isEdgeOK = false;
                                                 }
                                             if(!isEdgeOK)
@@ -152,40 +154,41 @@ namespace Rrt_sharp
                                 /*ROS_WARN_STREAM(std::to_string(minCost)); 
                                 ROS_WARN_STREAM(std::to_string(q.top().key));
                                 ROS_INFO_STREAM(std::to_string(q.size()));*/
+                       
                         while(!q.empty() && (q.top()).key < minCost)
                             {
                                 
                                 rrtSharpNode x(q.top());
                                 q.pop();
-                                //ROS_ERROR_STREAM("popped");
+                                //ROS_ERROR_STREAM("popped at the loop" + std::to_string(loop));
+                                //ROS_ERROR_STREAM(std::to_string(x.ind));
                                 x.g = x.lmc;
                                 
                                 for(int i = 0; i < vertices.size(); i++)
                                     {
-                                        if(x.index == vertices[i].index)
+                                        if(x.ind == vertices[i].ind)
                                             {
+                                                //ROS_WARN_STREAM("found");
                                                 vertices[i].g = x.g;
                                                 break;
                                             }
                                     }
-
-                                for(int i = 0; i < vertices.size()-1; i++)
+                            
+                                for(int i = 0; i < vertices.size(); i++)
                                 {
                                     double distance = planningUtilities::dist(vertices[i].coord, x.coord);
                                     bool isEdgeOK = true;
-                                    if( distance <= REWIRERADIUS)
+                                    if( distance <= REWIRERADIUS && vertices[i].ind != x.ind)
                                         {
                                             for(auto j = obs->begin(); j != obs->end(); j++)
                                                 {
-                                                    if(does_sep(newNodeCoord, vertices[i].coord, (*j)->coord.x, (*j)->coord.y, 0.5))
+                                                    if(!does_sep(x.coord, vertices[i].coord, (*j)->coord.x, (*j)->coord.y, 1.2))
                                                         isEdgeOK = false;
                                                 }
-                                            if(!isEdgeOK)
-                                                    continue;
-                                            if(vertices[i].lmc > x.g + planningUtilities::dist(vertices[i].coord, x.coord))
+                                            if(isEdgeOK && vertices[i].lmc > x.g + planningUtilities::dist(vertices[i].coord, x.coord))
                                                 {
                                                     vertices[i].lmc = x.g + planningUtilities::dist(vertices[i].coord, x.coord);
-                                                    vertices[i].parent = x.index;
+                                                    vertices[i].parent = x.ind;
                                                     q.push(vertices[i]);
                                                 }
                                             
@@ -199,7 +202,7 @@ namespace Rrt_sharp
                 std::vector<Coordinate> ret;
                 int cur = startTreeInd;
                 ROS_WARN_STREAM("The shortest path end node is " + std::to_string(startTreeInd));
-                ROS_ERROR_STREAM("The shortest path length is " + std::to_string(vertices[startTreeInd].lmc));//care here
+                ROS_ERROR_STREAM("The shortest path length is " + std::to_string(minCost));//care here
                 while(cur != -1)
                     {
                         s.push(vertices[cur].coord);
@@ -213,9 +216,8 @@ namespace Rrt_sharp
                 ret[0].z += INITIAL_HEIGHT;
                 ROS_WARN_STREAM("func is done");
                 ROS_WARN_STREAM("End point was used as random:" + std::to_string(counter));
-                ROS_WARN_STREAM(std::to_string(q.size()));
                 //ROS_WARN_STREAM("Tried but can not wired edges:" + std::to_string(notWired));
-                //ret = planningUtilities::filterCoordinates(ret, obs);
+                ret = planningUtilities::filterCoordinates(ret, obs);
                 return ret;
             }
     }
