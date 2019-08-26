@@ -4,7 +4,7 @@
 #include <gazebo_msgs/ModelStates.h>
 #include <hectorquad/coordinate.h>
 #include <std_srvs/Empty.h>
-#include <geometry_msgs/Quaternion.h>
+#include <geometry_msgs/Vector3.h>
 #include "AStar.hpp"
 #include "Rrt.hpp"
 #include "planningUtilities.hpp"
@@ -166,7 +166,7 @@ void prepareMap()
         callService(Coordinate(curQuadPose.x, curQuadPose.y, INITIAL_HEIGHT));
     }
 
-void getQuadPose(const geometry_msgs::Quaternion &msg)
+void getQuadPose(const geometry_msgs::Vector3 &msg)
     {
         curQuadPose.x = msg.x;
         curQuadPose.y = msg.y;

@@ -2,18 +2,16 @@
 #include <geometry_msgs/Twist.h>
 #include <hectorquad/coordinate.h>
 #include <gazebo_msgs/ModelStates.h>
-#include <geometry_msgs/Quaternion.h>
 #include "motionUtilities.hpp"
 
-#define EPSILON 0.15
-#define SPEED 1.2
+#define EPSILON 0.1
+#define SPEED 1.0
 #define QUADNAME "quadrotor"
 
 
 Coordinate coordToGo, currentCoord;
 
-ros::Publisher *pubPtr1;
-double yaw;
+ros::Publisher *pub;
 
 bool equalCoord(Coordinate &a, Coordinate &b)
     {
@@ -28,19 +26,32 @@ double coeff(double a, double b)
         else return a < b ? 1.0 : -1.0;
     }
 
-void getPose(const geometry_msgs::Quaternion &msg)
+void getPose(const gazebo_msgs::ModelStates &msg)
     {
+        int ind;
+        for (ind = 0; ind < msg.name.size(); ind++)
+        {
+            if (msg.name[ind] == QUADNAME)
+            {
+                break;
+            }
+        }
+        if (ind >= msg.name.size())
+        {
+            ROS_ERROR_STREAM("Quad not found");
+            return;
+        }
         static bool init = true;
-        //ROS_INFO_STREAM_ONCE("Quad is in position " << ind << "of the array.");
-        currentCoord.x = msg.x;
-        currentCoord.y = msg.y;
-        currentCoord.z = msg.z;
-        yaw = msg.w;
+        ROS_INFO_STREAM_ONCE("Quad is in position " << ind << "of the array.");
+        currentCoord.x = msg.pose[ind].position.x;
+        currentCoord.y = msg.pose[ind].position.y;
+        currentCoord.z = msg.pose[ind].position.z;
         if (init == true)
         {
             init = false;
             coordToGo = currentCoord;
         }
+        
         return;
     }
 
@@ -72,16 +83,10 @@ void goPose()
         float distanceX = fabs(coordToGo.x - currentCoord.x);
         float distanceY = fabs(coordToGo.y - currentCoord.y);
         float distanceZ = fabs(coordToGo.z - currentCoord.z);
-
-
         msg.linear.x = SPEED * distanceX / 2 * coeff(currentCoord.x, coordToGo.x);
         msg.linear.y = SPEED * distanceY / 2 * coeff(currentCoord.y, coordToGo.y);
         msg.linear.z = SPEED * distanceZ / 2 * coeff(currentCoord.z, coordToGo.z);
-        /*msg.angular.x = 0;
-        msg.angular.y = 0;*/
-        msg.angular.z = -yaw/8;
-        pubPtr1->publish(msg);
-
+        pub->publish(msg);
         return;
     }
 
@@ -91,9 +96,9 @@ int main(int argc, char* argv[])
     ros::NodeHandle nh;
     ROS_INFO_STREAM("Advertising service quadGoPose");
     ros::ServiceServer server = nh.advertiseService("quadGoPose", &serverFunc);
-    ros::Subscriber sub1 = nh.subscribe("quadPose", 1, &getPose);
+    ros::Subscriber sub1 = nh.subscribe("gazebo/model_states", 1, &getPose);
     ros::Publisher pub1 = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
-    pubPtr1 = &pub1;
+    pub = &pub1;
     ROS_INFO_STREAM("Subscribed.");
     while (ros::ok())
     {

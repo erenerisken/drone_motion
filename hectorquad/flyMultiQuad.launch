@@ -1,0 +1,20 @@
+<launch>
+    <node name="publishPose" pkg="hectorquad" type="publishPose" output="screen" />
+    <node name="MultipleGoPose" pkg="hectorquad" type="multipleGoPose" output="screen" />
+    <group ns="uav1">
+        <node name="goPose" pkg="hectorquad" type="goPose" output="screen" />
+        <node name="rrtPlanner" pkg="hectorquad" type="rrtPlanner" output="screen" />
+    </group>
+    <group ns="uav2">
+        <node name="goPose" pkg="hectorquad" type="goPose" output="screen" />
+        <node name="rrtPlanner" pkg="hectorquad" type="rrtPlanner" output="screen" />
+    </group>
+    <group ns="uav3">
+        <node name="goPose" pkg="hectorquad" type="goPose" output="screen" />
+        <node name="rrtPlanner" pkg="hectorquad" type="rrtPlanner" output="screen" />
+    </group>
+    <group ns="uav4">
+        <node name="goPose" pkg="hectorquad" type="goPose" output="screen" />
+        <node name="rrtPlanner" pkg="hectorquad" type="rrtPlanner" output="screen" />
+    </group>
+</launch>
