@@ -24,12 +24,34 @@ ros::ServiceClient *clientPtr;
 bool readyToPlan = false;
 std::vector<Coordinate> route;
 Coordinate curQuadPose;
+double destX, destY, startX, startY;
 
 PlannerType plannerType = RRTSTARONE;
 
 bool startPlanning(std_srvs::EmptyRequest &req, std_srvs::EmptyResponse &res)
     {
         ROS_INFO_STREAM("Ready to plan has been called.");
+        ROS_INFO_STREAM("Getting parameters.");
+        while(!ros::param::get("destX", destX))
+            {
+                ROS_WARN_STREAM_ONCE("Parameter destX is pending.");
+            }
+        ROS_WARN_STREAM_ONCE("Parameter destX has been set.");
+        while(!ros::param::get("destY", destY))
+            {
+                ROS_WARN_STREAM_ONCE("Parameter destY is pending.");
+            }
+        ROS_WARN_STREAM_ONCE("Parameter destY has been set.");
+        while(!ros::param::get("startX", startX))
+            {
+                ROS_WARN_STREAM_ONCE("Parameter startX is pending.");
+            }
+        ROS_WARN_STREAM_ONCE("Parameter startX has been set.");
+        while(!ros::param::get("startY", startY))
+            {
+                ROS_WARN_STREAM_ONCE("Parameter startY is pending.");
+            }
+        ROS_WARN_STREAM_ONCE("Parameter startY has been set.");
         readyToPlan = true;
         return true;
     }
@@ -135,31 +157,31 @@ void prepareMap()
         ROS_WARN_STREAM("Preparing map");
         if(plannerType == ASTAR)
             {
-                AStar::init(Coordinate(-10.0,-10.0,0), Coordinate(9.5,9.5,0));
+                AStar::init(Coordinate(startX,startY,0), Coordinate(destX,destY,0));
                 route = AStar::generateMap(obstacles, -10.0, 10.0, -10.0, 10.0, 0.1);
                 AStar::printMap();
             }
         else if(plannerType == RRT)
             {
-                Rrt::init(Coordinate(-10.0, -10.0, 0.4), Coordinate(10.0, 10.0, 0.4), 0.1, obstacles);
+                Rrt::init(Coordinate(startX, startY, 0.4), Coordinate(destX, destY, 0.4), 0.1, obstacles);
                 ROS_WARN_STREAM("Map is ready");
                 route = Rrt::rrtGetMap(-10.0, 10.0, -10.0, 10.0);
             }
         else if(plannerType == RRTSTAR)
             {
-                Rrt_star::init(Coordinate(0.0, 0.0, 0.4), Coordinate(10.0, 10.0, 0.4), 0.1, obstacles);
+                Rrt_star::init(Coordinate(startX, startY, 0.4), Coordinate(destX, destY, 0.4), 0.1, obstacles);
                 ROS_WARN_STREAM("Map is ready");
                 route = Rrt_star::rrtGetMap(-10.0, 10.0, -10.0, 10.0);
             }
         else if(plannerType == RRTSTARONE)
             {
-                Rrt_star::init(Coordinate(0.0, 0.0, 0.4), Coordinate(10.0, 10.0, 0.4), 0.1, obstacles);
+                Rrt_star::init(Coordinate(startX, startY, 0.4), Coordinate(destX, destY, 0.4), 0.1, obstacles);
                 ROS_WARN_STREAM("Map is ready");
                 route = Rrt_star::rrtGetMapOne(-10.0, 10.0, -10.0, 10.0);    
             }
         else if(plannerType == RRTSHARP)
             {
-                Rrt_sharp::init(Coordinate(0.0, 0.0, 0.4), Coordinate(10.0, 10.0, 0.4), 0.1, obstacles);
+                Rrt_sharp::init(Coordinate(startX, startY, 0.4), Coordinate(destX, destY, 0.4), 0.1, obstacles);
                 ROS_WARN_STREAM("Map is ready");
                 route = Rrt_sharp::getMap(-10.0, 10.0, -10.0, 10.0);    
             }
@@ -179,7 +201,7 @@ int main(int argc, char* argv[])
     {
         ros::init(argc, argv, "rrtPlanner");
         ros::NodeHandle nh;
-        ros::Subscriber sub1 = nh.subscribe("gazebo/model_states", 1000, &updatePositions);
+        ros::Subscriber sub1 = nh.subscribe("model_states", 1000, &updatePositions);
         ros::Subscriber sub2 = nh.subscribe("quadPose", 1, &getQuadPose);
         ros::service::waitForService("quadGoPose");
         ros::ServiceClient client = nh.serviceClient<hectorquad::coordinate>("quadGoPose");
@@ -257,7 +279,7 @@ int main(int argc, char* argv[])
                     drawed = true;
                 }
                 
-                //visitPoints(route);
+                visitPoints(route);
             }
         clearMemory();
     }

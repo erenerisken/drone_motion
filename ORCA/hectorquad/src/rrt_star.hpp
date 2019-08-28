@@ -7,7 +7,7 @@
 #include <stack>
 
 #define REWIRERADIUS 0.45 //fix later
-#define MAXLOOP 30000 //100K iteration . dont try this at home 
+#define MAXLOOP 3000 //100K iteration . dont try this at home 
 
 class RrtStarNode
         {

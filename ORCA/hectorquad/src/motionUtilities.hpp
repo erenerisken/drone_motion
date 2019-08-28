@@ -14,7 +14,7 @@ bool equalFloat(double a, double b)
 
 bool isObstacle(const std::string &name)
     {
-        if(name == "quadrotor" || name == "ground_plane")
+        if(name == "quadrotor" || name == "ground_plane" || name.substr(0,3) == "uav")
             return false;
         return true;
     }

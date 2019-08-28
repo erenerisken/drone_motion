@@ -20,16 +20,16 @@ class UAV
     {
         public:
             std::string name_;
-            ros::Publisher pub_, pub2_;
+            ros::Publisher pub_, pub2_, pub3_;
             ros::Subscriber sub_;
             geometry_msgs::Vector3 vel_;
             geometry_msgs::Pose pose_;
-
             UAV(std::string name) : name_(name)
                 {
                     ROS_INFO_STREAM(name + " has been added.");
                     pub_ = nhPtr->advertise<geometry_msgs::Quaternion>(name + "/quadPose", 1);
                     pub2_ = nhPtr->advertise<gazebo_msgs::ModelStates>(name + "/neighbors", 1);
+                    pub3_ = nhPtr->advertise<gazebo_msgs::ModelStates>(name + "/model_states", 1);
                     sub_ = nhPtr->subscribe(name + "/fix_velocity", 1, &velocityCallback);
                 }
             
@@ -123,6 +123,10 @@ void getPoses(const gazebo_msgs::ModelStates &msg)
                 quads[ind].pose_ = msg.pose[*i];
                 quads[ind].publishPose(pose);
             }
+        for(auto i = quads.begin(); i < quads.end(); i++)
+            {
+                i->pub3_.publish(msg);
+            }
     }
 
 int main(int argc, char* argv[])
@@ -131,7 +135,6 @@ int main(int argc, char* argv[])
         ros::NodeHandle nh;
         nhPtr = &nh;
         ros::Subscriber sub = nh.subscribe("gazebo/model_states", 1, &getPoses);
-
         for (size_t i = 1; i <= QUAD_COUNT; i++)
             {
                 quads.push_back(UAV("uav" + std::to_string(i)));
