@@ -1,0 +1,4 @@
+<launch>
+    <node name="goPose" pkg="hectorquad" type="goPose" output="screen" />
+    <node name="rrtPlanner" pkg="hectorquad" type="rrtPlanner" output="screen" />
+</launch>
