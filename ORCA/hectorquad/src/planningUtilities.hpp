@@ -12,9 +12,6 @@
 typedef std::vector<std::vector<int> > Matrix;
 typedef std::pair<int, int> intint;
 
-
-
-
 namespace planningUtilities
     {
         //TODO : check for line obstacle collision.(To avoid add edge passes through an object, as rewiring)
@@ -25,10 +22,6 @@ namespace planningUtilities
                 double slope2 = b.x == c.x ? -999.0 : (c.y - b.y) / (c.x - b.x);
                 return fabs(slope2 - slope1) < SLOPE_EPSILON;
             }
-        double dist(const Coordinate &c1, const Coordinate &c2)
-            {
-                return sqrt(pow(c1.x - c2.x, 2) + pow(c1.y - c2.y, 2) + pow(c1.z - c2.z, 2));
-            }
         int dist(intint c1, intint c2)
             {
                 //return abs(c1.second - c2.second) + abs(c1.first - c2.first);
@@ -36,33 +29,31 @@ namespace planningUtilities
             }
         std::vector<Coordinate> filterCoordinates(std::vector<Coordinate> &route, std::vector<Obstacle*> *obs)
             {
-                bool nfree2move = false;
-                if(route.size() < 3)
-                    return route;
+                //return route;
                 std::vector<Coordinate> ret;
-                size_t i=0, j=1, k=2;
-                for(k = 2; k<route.size(); k++)
+                for (size_t i = 0; i < route.size()-1; i++)
                     {
-                        nfree2move = false;
-                        if(isLinear(route[i], route[j], route[k]))
+                        ret.push_back(route[i]);
+                        for (size_t j = route.size()-1; j > i; j--)
                             {
-                                for(int i = 0; i < obs->size(); i++)
+                                bool clearPath = true;
+                                for (auto obstPtr = obs->begin(); obstPtr < obs->end(); obstPtr++)
                                     {
-                                        nfree2move = does_sep(route[i], route[j], (*obs)[i]->coord.x, (*obs)[i]->coord.y, 0.5);
-                                        if(nfree2move)break;
+                                        if((*obstPtr)->separates(route[i], route[j]))
+                                            {
+                                                clearPath = false;
+                                                break;
+                                            }
                                     }
-                                if(!nfree2move)
-                                    j = k;
-                            }
-                        else
-                            {
-                                ret.push_back(route[i]);
+                                if(!clearPath)
+                                    {
+                                        continue;
+                                    }            
                                 ret.push_back(route[j]);
                                 i = j;
-                                j = k;
+                                break;                    
                             }
                     }
-                ret.push_back(route[route.size()-1]);
                 return ret;
             }
     }

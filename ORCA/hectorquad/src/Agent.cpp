@@ -34,14 +34,18 @@
 #include "Obstacle.h"
 #include <ros/ros.h>
 #include <gazebo_msgs/ModelStates.h>
+#define OBSTACLE_RADIUS 0.1
+#define COLLISION_RADIUS 1.0
+
 
 namespace RVO {
-	Agent::Agent(const std::string &id) : maxNeighbors_(10), maxSpeed_(1.5f), neighborDist_(5.0f), radius_(1.0f), timeHorizon_(0.20f), timeHorizonObst_(0.5f), id_(id) { }
+	Agent::Agent(const std::string &id, float radius) : maxNeighbors_(10), maxSpeed_(1.5f), neighborDist_(5.0f), radius_(radius), timeHorizon_(0.01f), timeHorizonObst_(0.01f), id_(id) { }
 	//leak check
-	void Agent::prepareStep(const gazebo_msgs::ModelStates &neighbors, const geometry_msgs::Twist &pref)
+	void Agent::prepareStep(const gazebo_msgs::ModelStates &neighbors, const geometry_msgs::Twist &pref, const size_t obstacleInd)
 	{
 		if(neighbors.twist.size() <= 0)
 			return;
+		//ROS_WARN_STREAM_ONCE(std::to_string(neighbors.twist.size()) + " neighbors added.");
 		//ROS_WARN_STREAM("Prepare Step started.");
 		position_.x_ = neighbors.pose[0].position.x;
 		position_.y_ = neighbors.pose[0].position.y;
@@ -59,7 +63,7 @@ namespace RVO {
 		const size_t neighborCount = neighbors.name.size();
 		for (size_t i = 1; i < neighborCount; i++)
 			{
-				Agent *tmp = new Agent(neighbors.name[i]);
+				Agent *tmp = new Agent(neighbors.name[i], i>= obstacleInd ? OBSTACLE_RADIUS : COLLISION_RADIUS);
 				tmp->position_.x_ = neighbors.pose[i].position.x;
 				tmp->position_.y_ = neighbors.pose[i].position.y;
 				tmp->velocity_.x_ = neighbors.twist[i].linear.x;

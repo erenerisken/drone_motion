@@ -91,7 +91,7 @@ namespace Rrt_sharp
                         rrtSharpNode closestPoint(vertices[0]);
                         for(int i = 1; i<vertices.size(); i++)
                             {
-                                if(planningUtilities::dist(vertices[i].coord, randomPoint) < planningUtilities::dist(closestPoint.coord, randomPoint))
+                                if(dist(vertices[i].coord, randomPoint) < dist(closestPoint.coord, randomPoint))
                                     {
                                         closest = i;
                                         closestPoint.coord = vertices[i].coord;
@@ -101,9 +101,9 @@ namespace Rrt_sharp
                                     }
                             }
                         // Steering
-                        double mag = std::min(stepSize, planningUtilities::dist(closestPoint.coord, randomPoint));
-                        double newX = closestPoint.coord.x + mag * (randomPoint.x - closestPoint.coord.x) / planningUtilities::dist(closestPoint.coord, randomPoint);
-                        double newY = closestPoint.coord.y + mag * (randomPoint.y - closestPoint.coord.y) / planningUtilities::dist(closestPoint.coord, randomPoint);
+                        double mag = std::min(stepSize, dist(closestPoint.coord, randomPoint));
+                        double newX = closestPoint.coord.x + mag * (randomPoint.x - closestPoint.coord.x) / dist(closestPoint.coord, randomPoint);
+                        double newY = closestPoint.coord.y + mag * (randomPoint.y - closestPoint.coord.y) / dist(closestPoint.coord, randomPoint);
                         Coordinate newNodeCoord(newX, newY, HEIGHT);
 
                         // Obstacle Check
@@ -120,16 +120,16 @@ namespace Rrt_sharp
                         
                         if(!inBound)
                             {
-                                rrtSharpNode newNode(newNodeCoord, closest, INFINITY, closestPoint.g + mag, closestPoint.g + mag + planningUtilities::dist(newNodeCoord, endPoint), indCounter);
+                                rrtSharpNode newNode(newNodeCoord, closest, INFINITY, closestPoint.g + mag, closestPoint.g + mag + dist(newNodeCoord, endPoint), indCounter);
                                 for(int i = 0; i < vertices.size(); i++)
                                 {
-                                    double distance = planningUtilities::dist(vertices[i].coord, newNodeCoord);
+                                    double distance = dist(vertices[i].coord, newNodeCoord);
                                     bool isEdgeOK = true;
                                     if( distance <= REWIRERADIUS && (distance + vertices[i].g) < newNode.lmc)
                                         {
                                             for(auto j = obs->begin(); j != obs->end(); j++)
                                                 {
-                                                    if(!does_sep(newNodeCoord, vertices[i].coord, (*j)->coord.x, (*j)->coord.y, 1.2))
+                                                    if((*j)->separates(newNodeCoord, vertices[i].coord))
                                                         isEdgeOK = false;
                                                 }
                                             if(!isEdgeOK)
@@ -141,10 +141,10 @@ namespace Rrt_sharp
                                 vertices.push_back(newNode);
                                 indCounter++;
                                 q.push(newNode);
-                                if(planningUtilities::dist(newNodeCoord, endPoint) < stepSize * 10 && minCost > (newNode.lmc + planningUtilities::dist(newNodeCoord, endPoint)))
+                                if(dist(newNodeCoord, endPoint) < stepSize * 10 && minCost > (newNode.lmc + dist(newNodeCoord, endPoint)))
                                     {
                                         startTreeInd = vertices.size()-1;
-                                        minCost = newNode.lmc + planningUtilities::dist(newNodeCoord, endPoint);
+                                        minCost = newNode.lmc + dist(newNodeCoord, endPoint);
                                         ROS_ERROR_STREAM("New min cost is: " + std::to_string(minCost));
                                         ROS_INFO_STREAM("Change made in loop: " + std::to_string(MAXLOOP1 - loop));
                                     }
@@ -176,18 +176,18 @@ namespace Rrt_sharp
                             
                                 for(int i = 0; i < vertices.size(); i++)
                                 {
-                                    double distance = planningUtilities::dist(vertices[i].coord, x.coord);
+                                    double distance = dist(vertices[i].coord, x.coord);
                                     bool isEdgeOK = true;
                                     if( distance <= REWIRERADIUS && vertices[i].ind != x.ind)
                                         {
                                             for(auto j = obs->begin(); j != obs->end(); j++)
                                                 {
-                                                    if(!does_sep(x.coord, vertices[i].coord, (*j)->coord.x, (*j)->coord.y, 1.2))
+                                                    if((*j)->separates(x.coord, vertices[i].coord))
                                                         isEdgeOK = false;
                                                 }
-                                            if(isEdgeOK && vertices[i].lmc > x.g + planningUtilities::dist(vertices[i].coord, x.coord))
+                                            if(isEdgeOK && vertices[i].lmc > x.g + dist(vertices[i].coord, x.coord))
                                                 {
-                                                    vertices[i].lmc = x.g + planningUtilities::dist(vertices[i].coord, x.coord);
+                                                    vertices[i].lmc = x.g + dist(vertices[i].coord, x.coord);
                                                     vertices[i].parent = x.ind;
                                                     q.push(vertices[i]);
                                                 }

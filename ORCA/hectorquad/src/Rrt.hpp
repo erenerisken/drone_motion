@@ -38,7 +38,7 @@ namespace Rrt
                         Coordinate closestEndPoint = endNodes[0].first;
                         for(int i = 1; i<startNodes.size(); i++)
                             {
-                                if(planningUtilities::dist(startNodes[i].first, randomPoint) < planningUtilities::dist(closestStartPoint, randomPoint))
+                                if(dist(startNodes[i].first, randomPoint) < dist(closestStartPoint, randomPoint))
                                     {
                                         closestStart = i;
                                         closestStartPoint = startNodes[i].first; 
@@ -46,19 +46,19 @@ namespace Rrt
                             }
                         for(int i = 1; i<endNodes.size(); i++)
                             {
-                                if(planningUtilities::dist(endNodes[i].first, randomPoint) < planningUtilities::dist(closestEndPoint, randomPoint))
+                                if(dist(endNodes[i].first, randomPoint) < dist(closestEndPoint, randomPoint))
                                     {
                                         closestEnd = i;
                                         closestEndPoint = endNodes[i].first;
                                     }
                             }
                             
-                        double magStart = std::min(stepSize, planningUtilities::dist(closestStartPoint, randomPoint));
-                        double magEnd = std::min(stepSize, planningUtilities::dist(closestEndPoint, randomPoint));
-                        double newStartX = closestStartPoint.x + magStart * (randomPoint.x - closestStartPoint.x) / planningUtilities::dist(closestStartPoint, randomPoint);
-                        double newStartY = closestStartPoint.y + magStart * (randomPoint.y - closestStartPoint.y) / planningUtilities::dist(closestStartPoint, randomPoint);
-                        double newEndX = closestEndPoint.x + magEnd * (randomPoint.x - closestEndPoint.x) / planningUtilities::dist(closestEndPoint, randomPoint);
-                        double newEndY = closestEndPoint.y + magStart * (randomPoint.y - closestEndPoint.y) / planningUtilities::dist(closestEndPoint, randomPoint);
+                        double magStart = std::min(stepSize, dist(closestStartPoint, randomPoint));
+                        double magEnd = std::min(stepSize, dist(closestEndPoint, randomPoint));
+                        double newStartX = closestStartPoint.x + magStart * (randomPoint.x - closestStartPoint.x) / dist(closestStartPoint, randomPoint);
+                        double newStartY = closestStartPoint.y + magStart * (randomPoint.y - closestStartPoint.y) / dist(closestStartPoint, randomPoint);
+                        double newEndX = closestEndPoint.x + magEnd * (randomPoint.x - closestEndPoint.x) / dist(closestEndPoint, randomPoint);
+                        double newEndY = closestEndPoint.y + magStart * (randomPoint.y - closestEndPoint.y) / dist(closestEndPoint, randomPoint);
                         Coordinate newStart(newStartX, newStartY, HEIGHT), newEnd(newEndX, newEndY, HEIGHT);
                         bool inBoundStart = false, inBoundEnd = false;
                         for(auto i = obs->begin(); i != obs->end(); i++)
@@ -78,7 +78,7 @@ namespace Rrt
                             {
                                 continue;
                             }
-                        if(planningUtilities::dist(newStart, newEnd) < stepSize)
+                        if(dist(newStart, newEnd) < stepSize)
                             {
                                 finished = true;
                             }

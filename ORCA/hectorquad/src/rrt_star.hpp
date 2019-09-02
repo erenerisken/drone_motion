@@ -61,7 +61,7 @@ namespace Rrt_star
                         //finding the closest node
                         for(int i = 1; i<startVertices.size(); i++)
                             {
-                                if(planningUtilities::dist(startVertices[i].coord, randomPoint) < planningUtilities::dist(closestStartPoint.coord, randomPoint))
+                                if(dist(startVertices[i].coord, randomPoint) < dist(closestStartPoint.coord, randomPoint))
                                     {
                                         closestStart = i;
                                         closestStartPoint.coord = startVertices[i].coord;
@@ -72,7 +72,7 @@ namespace Rrt_star
                             }
                         for(int i = 1; i<endVertices.size(); i++)
                             {
-                                if(planningUtilities::dist(endVertices[i].coord, randomPoint) < planningUtilities::dist(closestEndPoint.coord, randomPoint))
+                                if(dist(endVertices[i].coord, randomPoint) < dist(closestEndPoint.coord, randomPoint))
                                     {
                                         closestEnd = i;
                                         closestEndPoint.coord = endVertices[i].coord;
@@ -83,12 +83,12 @@ namespace Rrt_star
                             }
                         
                         //creating new node wrt closest
-                        double magStart = std::min(stepSize, planningUtilities::dist(closestStartPoint.coord, randomPoint));
-                        double magEnd = std::min(stepSize, planningUtilities::dist(closestEndPoint.coord, randomPoint));
-                        double newStartX = closestStartPoint.coord.x + magStart * (randomPoint.x - closestStartPoint.coord.x) / planningUtilities::dist(closestStartPoint.coord, randomPoint);
-                        double newStartY = closestStartPoint.coord.y + magStart * (randomPoint.y - closestStartPoint.coord.y) / planningUtilities::dist(closestStartPoint.coord, randomPoint);
-                        double newEndX = closestEndPoint.coord.x + magEnd * (randomPoint.x - closestEndPoint.coord.x) / planningUtilities::dist(closestEndPoint.coord, randomPoint);
-                        double newEndY = closestEndPoint.coord.y + magStart * (randomPoint.y - closestEndPoint.coord.y) / planningUtilities::dist(closestEndPoint.coord, randomPoint);
+                        double magStart = std::min(stepSize, dist(closestStartPoint.coord, randomPoint));
+                        double magEnd = std::min(stepSize, dist(closestEndPoint.coord, randomPoint));
+                        double newStartX = closestStartPoint.coord.x + magStart * (randomPoint.x - closestStartPoint.coord.x) / dist(closestStartPoint.coord, randomPoint);
+                        double newStartY = closestStartPoint.coord.y + magStart * (randomPoint.y - closestStartPoint.coord.y) / dist(closestStartPoint.coord, randomPoint);
+                        double newEndX = closestEndPoint.coord.x + magEnd * (randomPoint.x - closestEndPoint.coord.x) / dist(closestEndPoint.coord, randomPoint);
+                        double newEndY = closestEndPoint.coord.y + magStart * (randomPoint.y - closestEndPoint.coord.y) / dist(closestEndPoint.coord, randomPoint);
                         Coordinate newStart(newStartX, newStartY, HEIGHT);
                         Coordinate newEnd(newEndX, newEndY, HEIGHT);
 
@@ -107,13 +107,13 @@ namespace Rrt_star
                                 for(int i = 0; i < startVertices.size(); i++)
                                     {
                                         bool isEdgeOK = true;
-                                        double distance = planningUtilities::dist(startVertices[i].coord, newStart);
+                                        double distance = dist(startVertices[i].coord, newStart);
                                         if( distance <= REWIRERADIUS && (distance + startVertices[i].g) < newStartNode.g )
                                             {
                                                 for(auto j = obs->begin(); j != obs->end(); j++)
                                                     {
-                                                        if(!does_sep(newStart, startVertices[i].coord, (*j)->coord.x, (*j)->coord.y, 1.1))
-                                                        isEdgeOK = false;
+                                                        if(!(*j)->separates(newStart, startVertices[i].coord))
+                                                            isEdgeOK = false;
                                                     }
                                                 if(!isEdgeOK)
                                                     continue;
@@ -124,13 +124,13 @@ namespace Rrt_star
                                 for(int i = 0; i < startVertices.size(); i++)
                                     {
                                         bool isEdgeOK = true;
-                                        double distance = planningUtilities::dist(startVertices[i].coord, newStart);
+                                        double distance = dist(startVertices[i].coord, newStart);
                                         if( distance <= REWIRERADIUS && (distance + newStartNode.g) < startVertices[i].g )
                                             {
                                                 for(auto j = obs->begin(); j != obs->end(); j++)
                                                     {
-                                                        if(!does_sep(newStart, startVertices[i].coord, (*j)->coord.x, (*j)->coord.y, 1.1))
-                                                        isEdgeOK = false;
+                                                        if(!(*j)->separates(newStart, startVertices[i].coord))
+                                                           isEdgeOK = false;
                                                     }
                                                 if(!isEdgeOK)
                                                     continue;
@@ -148,13 +148,13 @@ namespace Rrt_star
                                 for(int i = 0; i < endVertices.size(); i++)
                                     {
                                         bool isEdgeOK = true;
-                                        double distance = planningUtilities::dist(endVertices[i].coord, newEnd);
+                                        double distance = dist(endVertices[i].coord, newEnd);
                                         if( distance <= REWIRERADIUS && (distance + endVertices[i].g) < newEndNode.g )
                                             {
                                                 for(auto j = obs->begin(); j != obs->end(); j++)
                                                     {
-                                                        if(!does_sep(newEnd, endVertices[i].coord, (*j)->coord.x, (*j)->coord.y, 0.5))
-                                                        isEdgeOK = false;
+                                                        if(!(*j)->separates(newEnd, endVertices[i].coord))
+                                                            isEdgeOK = false;
                                                     }
                                                 if(!isEdgeOK)
                                                     continue;
@@ -166,13 +166,13 @@ namespace Rrt_star
                                 for(int i = 0; i < endVertices.size(); i++)
                                     {
                                         bool isEdgeOK = true;
-                                        double distance = planningUtilities::dist(endVertices[i].coord, newEnd);
+                                        double distance = dist(endVertices[i].coord, newEnd);
                                         if( distance <= REWIRERADIUS && (distance + newEndNode.g) < endVertices[i].g )
                                             {
                                                 for(auto j = obs->begin(); j != obs->end(); j++)
                                                     {
-                                                        if(!does_sep(newEnd, endVertices[i].coord, (*j)->coord.x, (*j)->coord.y, 0.5))
-                                                        isEdgeOK = false;
+                                                        if(!(*j)->separates(newEnd, endVertices[i].coord))
+                                                            isEdgeOK = false;
                                                     }
                                                 if(!isEdgeOK)
                                                     continue;
@@ -190,12 +190,12 @@ namespace Rrt_star
                             }
 
                         //shortest path recording
-                        if(planningUtilities::dist(newStart, newEnd) < stepSize && minCost > (newEndNode.g + newStartNode.g + planningUtilities::dist(newStart, newEnd)))
+                        if(dist(newStart, newEnd) < stepSize && minCost > (newEndNode.g + newStartNode.g + dist(newStart, newEnd)))
                             {
                                 //next 2 line keeps the shortest path's end nodes
                                 startTreeInd = startVertices.size()-1;
                                 endTreeInd = endVertices.size()-1;
-                                minCost = newEndNode.g + newStartNode.g + planningUtilities::dist(newStart, newEnd);
+                                minCost = newEndNode.g + newStartNode.g + dist(newStart, newEnd);
                                 ROS_WARN_STREAM("New min cost is: " + std::to_string(minCost));
                                 ROS_INFO_STREAM("Change made in loop: " + std::to_string(MAXLOOP - loop));
                             }
@@ -263,7 +263,7 @@ namespace Rrt_star
                         RrtStarNode closestStartPoint(startVertices[0]);
                         for(int i = 1; i<startVertices.size(); i++)
                             {
-                                if(planningUtilities::dist(startVertices[i].coord, randomPoint) < planningUtilities::dist(closestStartPoint.coord, randomPoint))
+                                if(dist(startVertices[i].coord, randomPoint) < dist(closestStartPoint.coord, randomPoint))
                                     {
                                         closestStart = i;
                                         closestStartPoint.coord = startVertices[i].coord;
@@ -272,9 +272,9 @@ namespace Rrt_star
                                         closestStartPoint.parentInd = startVertices[i].parentInd;
                                     }
                             }
-                        double magStart = std::min(stepSize, planningUtilities::dist(closestStartPoint.coord, randomPoint));
-                        double newStartX = closestStartPoint.coord.x + magStart * (randomPoint.x - closestStartPoint.coord.x) / planningUtilities::dist(closestStartPoint.coord, randomPoint);
-                        double newStartY = closestStartPoint.coord.y + magStart * (randomPoint.y - closestStartPoint.coord.y) / planningUtilities::dist(closestStartPoint.coord, randomPoint);
+                        double magStart = std::min(stepSize, dist(closestStartPoint.coord, randomPoint));
+                        double newStartX = closestStartPoint.coord.x + magStart * (randomPoint.x - closestStartPoint.coord.x) / dist(closestStartPoint.coord, randomPoint);
+                        double newStartY = closestStartPoint.coord.y + magStart * (randomPoint.y - closestStartPoint.coord.y) / dist(closestStartPoint.coord, randomPoint);
                         Coordinate newStart(newStartX, newStartY, HEIGHT);
                         bool inBoundStart = false;
                         for(auto i = obs->begin(); i != obs->end(); i++)
@@ -286,13 +286,13 @@ namespace Rrt_star
                             {
                                 for(int i = 0; i < startVertices.size(); i++)
                                 {
-                                    double distance = planningUtilities::dist(startVertices[i].coord, newStart);
+                                    double distance = dist(startVertices[i].coord, newStart);
                                     bool isEdgeOK = true;
                                     if( distance <= REWIRERADIUS && (distance + startVertices[i].g) < newStartNode.g)
                                         {
                                             for(auto j = obs->begin(); j != obs->end(); j++)
                                                 {
-                                                    if(!does_sep(newStart, startVertices[i].coord, (*j)->coord.x, (*j)->coord.y, 0.5))
+                                                    if(!(*j)->separates(newStart, startVertices[i].coord))
                                                         isEdgeOK = false;
                                                 }
                                             if(!isEdgeOK)
@@ -305,13 +305,13 @@ namespace Rrt_star
                                 for(int i = 0; i < startVertices.size(); i++)
                                     {
                                         bool isEdgeOK = true;
-                                        double distance = planningUtilities::dist(startVertices[i].coord, newStart);
+                                        double distance = dist(startVertices[i].coord, newStart);
                                         if( distance <= REWIRERADIUS && (distance + newStartNode.g) < startVertices[i].g )
                                             {
                                                 for(auto j = obs->begin(); j != obs->end(); j++)
                                                     {
-                                                        if(!does_sep(newStart, startVertices[i].coord, (*j)->coord.x, (*j)->coord.y, 1.1))
-                                                        isEdgeOK = false;
+                                                        if(!(*j)->separates(newStart, startVertices[i].coord))
+                                                            isEdgeOK = false;
                                                     }
                                                 if(!isEdgeOK)
                                                     continue;
@@ -329,11 +329,11 @@ namespace Rrt_star
                                 loop--;
                                 continue;
                             }
-                        if(planningUtilities::dist(newStart, end) < stepSize * 10 && minCost > (newStartNode.g + planningUtilities::dist(newStart, end)))
+                        if(dist(newStart, end) < stepSize * 10 && minCost > (newStartNode.g + dist(newStart, end)))
                             {
                                 if(first)firstFound = MAXLOOP - loop, first = false;
                                 startTreeInd = startVertices.size()-1;
-                                minCost = newStartNode.g + planningUtilities::dist(newStart, end);
+                                minCost = newStartNode.g + dist(newStart, end);
                                 ROS_ERROR_STREAM("New min cost is: " + std::to_string(minCost));
                                 ROS_INFO_STREAM("Change made in loop: " + std::to_string(MAXLOOP - loop));
                             }

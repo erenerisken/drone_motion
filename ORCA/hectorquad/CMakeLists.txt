@@ -34,3 +34,6 @@ target_link_libraries(subsVel ${catkin_LIBRARIES})
 
 add_executable(avoidCollision src/avoidCollision.cpp src/Agent.cpp src/Obstacle.cpp)
 target_link_libraries(avoidCollision ${catkin_LIBRARIES})
+
+add_executable(measureVelocity src/measureVelocity.cpp)
+target_link_libraries(measureVelocity ${catkin_LIBRARIES})

@@ -6,8 +6,7 @@
 #include <geometry_msgs/Quaternion.h>
 #include <gazebo_msgs/ModelStates.h>
 #include <vector>
-
-#define QUAD_COUNT 4
+#include "motionUtilities.hpp"
 
 ros::NodeHandle *nhPtr;
 
@@ -139,7 +138,7 @@ int main(int argc, char* argv[])
             {
                 quads.push_back(UAV("uav" + std::to_string(i)));
             }
-        ros::Rate rate(50);
+        ros::Rate rate(100);
         while(ros::ok())
             {
                 ros::spinOnce();

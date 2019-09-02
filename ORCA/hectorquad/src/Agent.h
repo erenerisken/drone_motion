@@ -56,12 +56,12 @@ namespace RVO {
 		 * \brief      Constructs an agent instance.
 		 * \param      sim             The simulator instance.
 		 */
-		Agent(const std::string &id);
+		Agent(const std::string &id, float radius);
 
 		/**
 		 * \brief      Computes the neighbors of this agent.
 		 */
-		void prepareStep(const gazebo_msgs::ModelStates &neighbors, const geometry_msgs::Twist &pref);
+		void prepareStep(const gazebo_msgs::ModelStates &neighbors, const geometry_msgs::Twist &pref, const size_t obstacleInd);
 
 		/**
 		 * \brief      Computes the new velocity of this agent.

@@ -12,16 +12,17 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 #include "rrt_sharp.hpp"
+#include <std_msgs/Bool.h>
 
 enum PlannerType
     {
-        RRT, ASTAR, RRTSTAR, RRTSTARONE, RRTSHARP
+        RRT, ASTAR, RRTSTAR, RRTSTARONE, RRTSHARP, DIRECT
     };
 
 std::vector<Obstacle*> obstacles;
 ros::ServiceClient *clientPtr;
 
-bool readyToPlan = false;
+bool readyToPlan = false, inCollision = false;
 std::vector<Coordinate> route;
 Coordinate curQuadPose;
 double destX, destY, startX, startY;
@@ -31,27 +32,6 @@ PlannerType plannerType = RRTSTARONE;
 bool startPlanning(std_srvs::EmptyRequest &req, std_srvs::EmptyResponse &res)
     {
         ROS_INFO_STREAM("Ready to plan has been called.");
-        ROS_INFO_STREAM("Getting parameters.");
-        while(!ros::param::get("destX", destX))
-            {
-                ROS_WARN_STREAM_ONCE("Parameter destX is pending.");
-            }
-        ROS_WARN_STREAM_ONCE("Parameter destX has been set.");
-        while(!ros::param::get("destY", destY))
-            {
-                ROS_WARN_STREAM_ONCE("Parameter destY is pending.");
-            }
-        ROS_WARN_STREAM_ONCE("Parameter destY has been set.");
-        while(!ros::param::get("startX", startX))
-            {
-                ROS_WARN_STREAM_ONCE("Parameter startX is pending.");
-            }
-        ROS_WARN_STREAM_ONCE("Parameter startX has been set.");
-        while(!ros::param::get("startY", startY))
-            {
-                ROS_WARN_STREAM_ONCE("Parameter startY is pending.");
-            }
-        ROS_WARN_STREAM_ONCE("Parameter startY has been set.");
         readyToPlan = true;
         return true;
     }
@@ -119,12 +99,12 @@ void callService(const Coordinate &c)
         req.y = c.y;
         req.z = c.z;
         clientPtr->call(req, res);
-        ROS_INFO_STREAM("Quad has been directed to "<<c);
+        //ROS_INFO_STREAM("Quad has been directed to "<<c);
     }
 
 void visitPoints(std::vector<Coordinate> &v)
     {   
-        if(!quadAvail())
+        if(!quadAvail() && !inCollision)
             {
                 return;
             }
@@ -134,9 +114,22 @@ void visitPoints(std::vector<Coordinate> &v)
                 return;
             }
         static int ind = 0;
+        if (inCollision)
+            {
+                for(; ind < v.size()-1; ind++)
+                    if (dist(v[ind], curQuadPose) >= SKIP_COEFF * (QUAD_RADII + CLEARENCE))
+                        {
+                            ROS_WARN_STREAM("Changed coordinate to" << v[ind].x << " " << v[ind].y << " " << v[ind].z);
+                            break;
+                        }
+                    
+            }
+        
         callService(v[ind]);
-        ind++;
-        ind %= v.size();
+        if(quadAvail())
+            ind++;
+        if(ind >= v.size())
+            ind = v.size()-1;
         return;
     }
 
@@ -185,6 +178,12 @@ void prepareMap()
                 ROS_WARN_STREAM("Map is ready");
                 route = Rrt_sharp::getMap(-10.0, 10.0, -10.0, 10.0);    
             }
+        else if(plannerType == DIRECT)
+            {
+                route.push_back(Coordinate(startX, startY, 0.4));
+                route.push_back(Coordinate(destX, destY, 0.4));
+                ROS_WARN_STREAM("Map is ready.");
+            }
         callService(Coordinate(curQuadPose.x, curQuadPose.y, INITIAL_HEIGHT));
     }
 
@@ -196,13 +195,45 @@ void getQuadPose(const geometry_msgs::Quaternion &msg)
         return;
     }
 
+void getParameters()
+    {
+        ROS_INFO_STREAM("Getting parameters.");
+        while(!ros::param::get("destX", destX))
+            {
+                ROS_WARN_STREAM_ONCE("Parameter destX is pending.");
+            }
+        ROS_WARN_STREAM_ONCE("Parameter destX has been set.");
+        while(!ros::param::get("destY", destY))
+            {
+                ROS_WARN_STREAM_ONCE("Parameter destY is pending.");
+            }
+        ROS_WARN_STREAM_ONCE("Parameter destY has been set.");
+        while(!ros::param::get("startX", startX))
+            {
+                ROS_WARN_STREAM_ONCE("Parameter startX is pending.");
+            }
+        ROS_WARN_STREAM_ONCE("Parameter startX has been set.");
+        while(!ros::param::get("startY", startY))
+            {
+                ROS_WARN_STREAM_ONCE("Parameter startY is pending.");
+            }
+        ROS_WARN_STREAM_ONCE("Parameter startY has been set.");
+    }
+
+void getCollision(const std_msgs::Bool &msg)
+    {
+        inCollision = msg.data;
+        return;
+    }
 
 int main(int argc, char* argv[])
     {
+        srand(time(NULL));
         ros::init(argc, argv, "rrtPlanner");
         ros::NodeHandle nh;
         ros::Subscriber sub1 = nh.subscribe("model_states", 1000, &updatePositions);
         ros::Subscriber sub2 = nh.subscribe("quadPose", 1, &getQuadPose);
+        ros::Subscriber sub3 = nh.subscribe("inCollision", 1, &getCollision);
         ros::service::waitForService("quadGoPose");
         ros::ServiceClient client = nh.serviceClient<hectorquad::coordinate>("quadGoPose");
         ros::ServiceServer service = nh.advertiseService("startPlanning", &startPlanning);
@@ -210,15 +241,20 @@ int main(int argc, char* argv[])
         ros::Rate r(1);
         ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
         ros::Publisher markerArray_pub = nh.advertise<visualization_msgs::MarkerArray>("visualization_marker_array",1);
+        ros::Publisher markerArray_pub2 = nh.advertise<visualization_msgs::MarkerArray>("droneVis",1);
         visualization_msgs::MarkerArray obsArray;
         visualization_msgs::Marker points, line_strip, cylinder;
         points.type = visualization_msgs::Marker::POINTS;
         line_strip.type = visualization_msgs::Marker::LINE_STRIP;
         cylinder.type = visualization_msgs::Marker::CYLINDER;
 
+        line_strip.color.r = float(rand()) / float(RAND_MAX);
+        line_strip.color.g = float(rand()) / float(RAND_MAX);
+        line_strip.color.b = float(rand()) / float(RAND_MAX);
+        ROS_WARN_STREAM("r = " + std::to_string(line_strip.color.r) + "g = " + std::to_string(line_strip.color.g) + "b = " + std::to_string(line_strip.color.b) );
         
         bool drawed = false;
-       
+        getParameters();
         while(ros::ok())
             {
                 cylinder.header.frame_id = points.header.frame_id = line_strip.header.frame_id = "/world";
@@ -246,11 +282,10 @@ int main(int argc, char* argv[])
                 points.color.g = 1.0f;
                 points.color.a = 1.0;
 
-                line_strip.color.b = 1.0;
                 line_strip.color.a = 1.0;
 
             
-                obsArray.markers.resize(obstacles.size());
+                obsArray.markers.resize(obstacles.size()+1);
                 for(int i = 0; i < obstacles.size(); i++)
                     {
                         cylinder.id = 2 + i;
@@ -259,6 +294,11 @@ int main(int argc, char* argv[])
                         cylinder.pose.position.z = obstacles[i]->coord.z;
                         obsArray.markers[i] = cylinder;
                     }
+                cylinder.pose.position.x = curQuadPose.x;
+                cylinder.pose.position.y = curQuadPose.y;
+                cylinder.pose.position.z = curQuadPose.z;
+                cylinder.id = obstacles.size() + 2;
+                obsArray.markers[obstacles.size()] = cylinder;
                 markerArray_pub.publish(obsArray);
                 ros::spinOnce();
                 prepareMap();

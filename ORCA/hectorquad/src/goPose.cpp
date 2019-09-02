@@ -5,7 +5,7 @@
 #include <geometry_msgs/Quaternion.h>
 #include "motionUtilities.hpp"
 
-#define EPSILON 0.15
+#define EPSILON 0.8
 #define SPEED 1.0
 #define QUADNAME "quadrotor"
 
@@ -46,7 +46,7 @@ void getPose(const geometry_msgs::Quaternion &msg)
 
 bool serverFunc(hectorquad::coordinate::Request &req, hectorquad::coordinate::Response &res)
 {
-    ROS_INFO_STREAM("Service has called for x = " << req.x << " y = " << req.y << " z  = " << req.z);
+    //ROS_INFO_STREAM("Service has called for x = " << req.x << " y = " << req.y << " z  = " << req.z);
     res.s = "Processed.";
     coordToGo.x = req.x;
     coordToGo.y = req.y;
@@ -95,10 +95,12 @@ int main(int argc, char* argv[])
     ros::Publisher pub1 = nh.advertise<geometry_msgs::Twist>("cmd_vel_pref", 1);
     pubPtr1 = &pub1;
     ROS_INFO_STREAM("Subscribed.");
+    ros::Rate rate(100);
     while (ros::ok())
     {
         ros::spinOnce();
         goPose();
+        rate.sleep();
     }
     
     return 0;
