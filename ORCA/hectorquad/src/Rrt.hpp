@@ -1,7 +1,6 @@
 #ifndef _RRT_HPP_
 #define _RRT_HPP_
 
-#include "planningUtilities.hpp"
 #include <ros/ros.h>
 #include "motionUtilities.hpp"
 #include <stack>

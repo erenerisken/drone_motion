@@ -7,7 +7,6 @@
 #include <geometry_msgs/Quaternion.h>
 #include "AStar.hpp"
 #include "Rrt.hpp"
-#include "planningUtilities.hpp"
 #include "rrt_star.hpp"
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -23,9 +22,10 @@ std::vector<Obstacle*> obstacles;
 ros::ServiceClient *clientPtr;
 
 bool readyToPlan = false, inCollision = false;
-std::vector<Coordinate> route;
+std::vector<Coordinate> route, actualRoute;
 Coordinate curQuadPose;
 double destX, destY, startX, startY;
+int randomSeed;
 
 PlannerType plannerType = RRTSTARONE;
 
@@ -189,9 +189,15 @@ void prepareMap()
 
 void getQuadPose(const geometry_msgs::Quaternion &msg)
     {
+        static int count = 0;
         curQuadPose.x = msg.x;
         curQuadPose.y = msg.y;
         curQuadPose.z = msg.z;
+        if (++count % 10 == 0)
+            {
+                if(actualRoute.size() == 0 || actualRoute[actualRoute.size()-1] != curQuadPose)
+                    actualRoute.push_back(curQuadPose);
+            }
         return;
     }
 
@@ -218,6 +224,11 @@ void getParameters()
                 ROS_WARN_STREAM_ONCE("Parameter startY is pending.");
             }
         ROS_WARN_STREAM_ONCE("Parameter startY has been set.");
+        while(!ros::param::get("randomSeed", randomSeed))
+            {
+                ROS_WARN_STREAM_ONCE("Parameter randomSeed is pending.");
+            }
+        ROS_WARN_STREAM_ONCE("Parameter randomSeed has been set.");
     }
 
 void getCollision(const std_msgs::Bool &msg)
@@ -226,99 +237,117 @@ void getCollision(const std_msgs::Bool &msg)
         return;
     }
 
+void visualise(ros::Publisher &marker_pub, ros::Publisher &markerArray_pub)
+    {
+        static visualization_msgs::MarkerArray obsArray;
+        static visualization_msgs::Marker points, line_strip, cylinder;
+        static bool init = true;
+        if(init)
+            {
+                init = false;
+                points.type =  visualization_msgs::Marker::POINTS;
+                line_strip.type = visualization_msgs::Marker::LINE_STRIP;
+                cylinder.type = visualization_msgs::Marker::CYLINDER;
+                line_strip.color.r = float(rand()) / float(RAND_MAX);
+                line_strip.color.g = float(rand()) / float(RAND_MAX);
+                line_strip.color.b = float(rand()) / float(RAND_MAX);
+            }
+        cylinder.header.frame_id = points.header.frame_id = line_strip.header.frame_id = "/world";
+        cylinder.header.stamp = points.header.stamp = line_strip.header.stamp = ros::Time::now();
+        cylinder.ns = "cylinders";
+        points.ns = line_strip.ns = "points_and_lines";
+        cylinder.action = points.action = line_strip.action = visualization_msgs::Marker::ADD;
+        cylinder.pose.orientation.w = points.pose.orientation.w = line_strip.pose.orientation.w = 1.0;
+
+        points.id = 0;
+        line_strip.id = 1;
+
+        cylinder.scale.x = 1.0;
+        cylinder.scale.y = 1.0;
+        cylinder.scale.z = 2.0;
+
+        points.scale.x = 0.2;
+        points.scale.y = 0.2;
+
+        line_strip.scale.x = 0.1;
+
+        cylinder.color.r = 1.0f;
+        cylinder.color.g = 0.0f;
+        cylinder.color.b = 0.0f;
+        cylinder.color.a = 1.0;
+
+        points.color.r = line_strip.color.r;
+        points.color.g = line_strip.color.g;
+        points.color.b = line_strip.color.b;
+        points.color.a = 1.0;
+
+        line_strip.color.a = 1.0;
+            
+        obsArray.markers.resize(obstacles.size()+1);
+        for(int i = 0; i < obstacles.size(); i++)
+            {
+                cylinder.id = 2 + i;
+                cylinder.pose.position.x = obstacles[i]->coord.x;
+                cylinder.pose.position.y = obstacles[i]->coord.y;
+                cylinder.pose.position.z = obstacles[i]->coord.z;
+                obsArray.markers[i] = cylinder;
+            }
+        cylinder.pose.position.x = curQuadPose.x;
+        cylinder.pose.position.y = curQuadPose.y;
+        cylinder.pose.position.z = curQuadPose.z;
+        cylinder.color.r = 0;
+        cylinder.color.g = 0;
+        cylinder.color.b = 1.0f;
+        cylinder.scale.z = 0.5f;
+        cylinder.id = obstacles.size() + 2;
+        obsArray.markers[obstacles.size()] = cylinder;
+        markerArray_pub.publish(obsArray);
+        if (route.size() > 0)
+            {
+                points.points.clear();
+                line_strip.points.clear();
+                for(int i = 0; i < route.size(); i++)
+                    {
+                        geometry_msgs::Point p;
+                        p.x = route[i].x;
+                        p.y = route[i].y;
+                        p.z = route[i].z;
+                        line_strip.points.push_back(p);
+                    }
+                for(int i = 0; i < actualRoute.size(); i++)
+                    {
+                        geometry_msgs::Point p;
+                        p.x = actualRoute[i].x;
+                        p.y = actualRoute[i].y;
+                        p.z = actualRoute[i].z;
+                        points.points.push_back(p);
+                    }
+                marker_pub.publish(points);
+                marker_pub.publish(line_strip);
+            }
+    }
+
 int main(int argc, char* argv[])
     {
-        srand(time(NULL));
         ros::init(argc, argv, "rrtPlanner");
         ros::NodeHandle nh;
-        ros::Subscriber sub1 = nh.subscribe("model_states", 1000, &updatePositions);
+        ros::Subscriber sub1 = nh.subscribe("model_states", 1, &updatePositions);
         ros::Subscriber sub2 = nh.subscribe("quadPose", 1, &getQuadPose);
         ros::Subscriber sub3 = nh.subscribe("inCollision", 1, &getCollision);
         ros::service::waitForService("quadGoPose");
         ros::ServiceClient client = nh.serviceClient<hectorquad::coordinate>("quadGoPose");
         ros::ServiceServer service = nh.advertiseService("startPlanning", &startPlanning);
         clientPtr = &client;
-        ros::Rate r(1);
         ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
         ros::Publisher markerArray_pub = nh.advertise<visualization_msgs::MarkerArray>("visualization_marker_array",1);
-        ros::Publisher markerArray_pub2 = nh.advertise<visualization_msgs::MarkerArray>("droneVis",1);
-        visualization_msgs::MarkerArray obsArray;
-        visualization_msgs::Marker points, line_strip, cylinder;
-        points.type = visualization_msgs::Marker::POINTS;
-        line_strip.type = visualization_msgs::Marker::LINE_STRIP;
-        cylinder.type = visualization_msgs::Marker::CYLINDER;
-
-        line_strip.color.r = float(rand()) / float(RAND_MAX);
-        line_strip.color.g = float(rand()) / float(RAND_MAX);
-        line_strip.color.b = float(rand()) / float(RAND_MAX);
-        ROS_WARN_STREAM("r = " + std::to_string(line_strip.color.r) + "g = " + std::to_string(line_strip.color.g) + "b = " + std::to_string(line_strip.color.b) );
-        
-        bool drawed = false;
         getParameters();
+        srand(randomSeed);
+        //ROS_WARN_STREAM("A random number is " << rand() << " seed is " << randomSeed);
         while(ros::ok())
             {
-                cylinder.header.frame_id = points.header.frame_id = line_strip.header.frame_id = "/world";
-                cylinder.header.stamp = points.header.stamp = line_strip.header.stamp = ros::Time::now();
-                cylinder.ns = "cylinders";
-                points.ns = line_strip.ns = "points_and_lines";
-                cylinder.action = points.action = line_strip.action = visualization_msgs::Marker::ADD;
-                cylinder.pose.orientation.w = points.pose.orientation.w = line_strip.pose.orientation.w = 1.0;
-
-                points.id = 0;
-                line_strip.id = 1;
-
-                cylinder.scale.x = 1.0;
-                cylinder.scale.y = 1.0;
-                cylinder.scale.z = 2.0;
-
-                points.scale.x = 0.2;
-                points.scale.y = 0.2;
-
-                line_strip.scale.x = 0.1;
-
-                cylinder.color.r = 1.0f;
-                cylinder.color.a = 1.0;
-
-                points.color.g = 1.0f;
-                points.color.a = 1.0;
-
-                line_strip.color.a = 1.0;
-
-            
-                obsArray.markers.resize(obstacles.size()+1);
-                for(int i = 0; i < obstacles.size(); i++)
-                    {
-                        cylinder.id = 2 + i;
-                        cylinder.pose.position.x = obstacles[i]->coord.x;
-                        cylinder.pose.position.y = obstacles[i]->coord.y;
-                        cylinder.pose.position.z = obstacles[i]->coord.z;
-                        obsArray.markers[i] = cylinder;
-                    }
-                cylinder.pose.position.x = curQuadPose.x;
-                cylinder.pose.position.y = curQuadPose.y;
-                cylinder.pose.position.z = curQuadPose.z;
-                cylinder.id = obstacles.size() + 2;
-                obsArray.markers[obstacles.size()] = cylinder;
-                markerArray_pub.publish(obsArray);
                 ros::spinOnce();
                 prepareMap();
-                if (!drawed && route.size() > 0)
-                { 
-                    for(int i = 1; i < route.size(); i++)
-                    {
-                        geometry_msgs::Point p;
-                        p.x = route[i].x;
-                        p.y = route[i].y;
-                        p.z = route[i].z;
-
-                        points.points.push_back(p);
-                        line_strip.points.push_back(p);
-                    }
-                    marker_pub.publish(points);
-                    marker_pub.publish(line_strip);
-                    drawed = true;
-                }
-                
+                visualise(marker_pub, markerArray_pub);
                 visitPoints(route);
             }
         clearMemory();

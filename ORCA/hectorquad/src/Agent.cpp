@@ -39,7 +39,7 @@
 
 
 namespace RVO {
-	Agent::Agent(const std::string &id, float radius) : maxNeighbors_(10), maxSpeed_(1.5f), neighborDist_(5.0f), radius_(radius), timeHorizon_(0.01f), timeHorizonObst_(0.01f), id_(id) { }
+	Agent::Agent(const std::string &id, float radius) : maxNeighbors_(20), maxSpeed_(1.5f), neighborDist_(5.0f), radius_(radius), timeHorizon_(0.01f), timeHorizonObst_(0.01f), id_(id) { }
 	//leak check
 	void Agent::prepareStep(const gazebo_msgs::ModelStates &neighbors, const geometry_msgs::Twist &pref, const size_t obstacleInd)
 	{

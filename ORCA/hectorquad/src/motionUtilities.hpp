@@ -3,6 +3,7 @@
 
 #include <ros/ros.h>
 #include <iostream>
+#include <vector>
 #include <geometry_msgs/Vector3.h>
 
 #define FLOAT_EPSILON 0.001
@@ -13,6 +14,14 @@
 #define SKIP_COEFF 4
 #define OBSTACLE_RADIUS 0.1
 #define COLLISION_RADIUS 1.0
+
+#define INITIAL_HEIGHT 4.0 //not to hit object while going to start point
+#define SLOPE_EPSILON 0.79 //Stable value 0.54 - 30 deg // 1.04 - 60 deg
+#define HEIGHT 0.4  //from ground
+#define PROBABILITY 0.07 // puts A* magic into RRT*
+
+typedef std::vector<std::vector<int> > Matrix;
+typedef std::pair<int, int> intint;
 
 bool equalFloat(double a, double b)
     {
@@ -38,6 +47,10 @@ class Coordinate
             bool operator==(const Coordinate &rhs)
                 {
                     return equalFloat(x, rhs.x) && equalFloat(y, rhs.y) && equalFloat(z, rhs.z);
+                }
+            bool operator!=(const Coordinate &rhs)
+                {
+                    return !(*this == rhs);
                 }
             friend std::ostream& operator<<(std::ostream &os, const Coordinate &c)
                 {
@@ -113,4 +126,51 @@ double dist(const Coordinate &c1, const Coordinate &c2)
     {
         return sqrt((c1.x - c2.x) * (c1.x - c2.x) + (c1.y - c2.y) * (c1.y - c2.y) + (c1.z - c2.z) * (c1.z - c2.z));
     }
+
+
+namespace planningUtilities
+    {
+
+        bool isLinear(const Coordinate &a, const Coordinate &b, const Coordinate &c)
+            {
+                double slope1 = a.x == b.x ? -999.0 : (b.y - a.y) / (b.x - a.x);
+                double slope2 = b.x == c.x ? -999.0 : (c.y - b.y) / (c.x - b.x);
+                return fabs(slope2 - slope1) < SLOPE_EPSILON;
+            }
+        int dist(intint c1, intint c2)
+            {
+                //return abs(c1.second - c2.second) + abs(c1.first - c2.first);
+                return (int)sqrt(pow((c1.second - c2.second),2) + pow((c1.first - c2.first) ,2));
+            }
+        std::vector<Coordinate> filterCoordinates(std::vector<Coordinate> &route, std::vector<Obstacle*> *obs)
+            {
+                //return route;
+                std::vector<Coordinate> ret;
+                for (size_t i = 0; i < route.size()-1; i++)
+                    {
+                        ret.push_back(route[i]);
+                        for (size_t j = route.size()-1; j > i; j--)
+                            {
+                                bool clearPath = true;
+                                for (auto obstPtr = obs->begin(); obstPtr < obs->end(); obstPtr++)
+                                    {
+                                        if((*obstPtr)->separates(route[i], route[j]))
+                                            {
+                                                clearPath = false;
+                                                break;
+                                            }
+                                    }
+                                if(!clearPath)
+                                    {
+                                        continue;
+                                    }            
+                                ret.push_back(route[j]);
+                                i = j;
+                                break;                    
+                            }
+                    }
+                return ret;
+            }
+    }
+
 #endif

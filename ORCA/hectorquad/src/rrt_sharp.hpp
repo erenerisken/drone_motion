@@ -3,7 +3,6 @@
 
 #include <queue>
 #include <stack>
-#include "planningUtilities.hpp"
 #include "motionUtilities.hpp"
 #include <ros/ros.h>
 

@@ -37,36 +37,36 @@ void getPose(const geometry_msgs::Quaternion &msg)
         currentCoord.z = msg.z;
         yaw = msg.w;
         if (init == true)
-        {
-            init = false;
-            coordToGo = currentCoord;
-        }
+            {
+                init = false;
+                coordToGo = currentCoord;
+            }
         return;
     }
 
 bool serverFunc(hectorquad::coordinate::Request &req, hectorquad::coordinate::Response &res)
-{
-    //ROS_INFO_STREAM("Service has called for x = " << req.x << " y = " << req.y << " z  = " << req.z);
-    res.s = "Processed.";
-    coordToGo.x = req.x;
-    coordToGo.y = req.y;
-    coordToGo.z = req.z;
-    return true;
-}
+    {
+        //ROS_INFO_STREAM("Service has called for x = " << req.x << " y = " << req.y << " z  = " << req.z);
+        res.s = "Processed.";
+        coordToGo.x = req.x;
+        coordToGo.y = req.y;
+        coordToGo.z = req.z;
+        return true;
+    }
 
 void goPose()
     {
         static int paramState = -1;
         if (equalCoord(currentCoord, coordToGo) && paramState != 1)
-        {
-            ros::param::set("quadIdle", "1");
-            paramState = 1;
-        }
+            {
+                ros::param::set("quadIdle", "1");
+                paramState = 1;
+            }
         else if(paramState != 0)
-        {
-            paramState = 0;
-            ros::param::set("quadIdle", "0");
-        }
+            {
+                paramState = 0;
+                ros::param::set("quadIdle", "0");
+            }
         
         geometry_msgs::Twist msg;
         float distanceX = fabs(coordToGo.x - currentCoord.x);
@@ -86,22 +86,22 @@ void goPose()
     }
 
 int main(int argc, char* argv[])
-{
-    ros::init(argc, argv, "goPose");
-    ros::NodeHandle nh;
-    ROS_INFO_STREAM("Advertising service quadGoPose");
-    ros::ServiceServer server = nh.advertiseService("quadGoPose", &serverFunc);
-    ros::Subscriber sub1 = nh.subscribe("quadPose", 1, &getPose);
-    ros::Publisher pub1 = nh.advertise<geometry_msgs::Twist>("cmd_vel_pref", 1);
-    pubPtr1 = &pub1;
-    ROS_INFO_STREAM("Subscribed.");
-    ros::Rate rate(100);
-    while (ros::ok())
     {
-        ros::spinOnce();
-        goPose();
-        rate.sleep();
+        ros::init(argc, argv, "goPose");
+        ros::NodeHandle nh;
+        ROS_INFO_STREAM("Advertising service quadGoPose");
+        ros::ServiceServer server = nh.advertiseService("quadGoPose", &serverFunc);
+        ros::Subscriber sub1 = nh.subscribe("quadPose", 1, &getPose);
+        ros::Publisher pub1 = nh.advertise<geometry_msgs::Twist>("cmd_vel_pref", 1);
+        pubPtr1 = &pub1;
+        ROS_INFO_STREAM("Subscribed.");
+        ros::Rate rate(100);
+        while (ros::ok())
+            {
+                ros::spinOnce();
+                goPose();
+                rate.sleep();
+            }
+        
+        return 0;
     }
-    
-    return 0;
-}

@@ -4,6 +4,7 @@
 #include "Agent.h"
 #include "motionUtilities.hpp"
 #include <std_msgs/Bool.h>
+#include <chrono>
 
 ros::Publisher *pubPtr, *pubPtr2;
 RVO::Agent quad("uav", COLLISION_RADIUS);
@@ -12,6 +13,7 @@ gazebo_msgs::ModelStates neighbors, obstacles;
 
 void velCallback(const geometry_msgs::Twist &msg)
     {
+        //auto start = std::chrono::steady_clock::now();
         if(!ready)
             {
                 pubPtr->publish(msg);
@@ -28,6 +30,8 @@ void velCallback(const geometry_msgs::Twist &msg)
         newVel.linear.x = quad.newVelocity_.x_;
         newVel.linear.y = quad.newVelocity_.y_;
         pubPtr->publish(newVel);
+        //auto end = std::chrono::steady_clock::now();
+        //ROS_INFO_STREAM("Time passed : " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
     }
 
 void neighborCallback(const gazebo_msgs::ModelStates &msg)
