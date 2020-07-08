@@ -1,0 +1,8 @@
+prefix=/home/eren/Documents/ros_deneme/devel
+
+Name: crazyflie_cpp
+Description: Description of crazyflie_cpp
+Version: 0.0.1
+Cflags: -I/home/eren/Documents/ros_deneme/src/crazyflie_ros/crazyflie_cpp/include
+Libs: -L/home/eren/Documents/ros_deneme/devel/lib -lcrazyflie_cpp
+Requires: 

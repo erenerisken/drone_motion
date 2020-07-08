@@ -1,0 +1,2 @@
+deneme:hectorquad
+-DCATKIN_DEVEL_PREFIX=/home/eren/Documents/ros_deneme/devel -DCMAKE_INSTALL_PREFIX=/home/eren/Documents/ros_deneme/install -G Unix Makefiles

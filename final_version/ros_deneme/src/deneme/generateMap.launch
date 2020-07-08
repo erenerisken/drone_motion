@@ -1,0 +1,3 @@
+<launch>
+    <node name="box1Generator" pkg="gazebo_ros" type="spawn_model" args="-urdf -file /home/eren/Documents/ros_deneme/src/deneme/box.urdf -model box2 -x 1.0 -y 1.0 -z 1.0" />
+</launch>

@@ -1,0 +1,34 @@
+<launch>
+    <node
+        pkg="turtlesim"
+        type="turtlesim_node"
+        name="turtlesim_node"
+        required="true"
+    />
+    <node
+        pkg="deneme"
+        type="spawnNew"
+        name="spawnNew"
+        output="screen"
+    />
+    <node
+        pkg="deneme"
+        type="directOther"
+        name="directOther"
+        output="screen"
+    />
+    <node
+        pkg="deneme"
+        type="detectCollision"
+        name="detectCollision"
+        output="screen"
+    />
+    <node
+        pkg="turtlesim"
+        type="turtle_teleop_key"
+        name="turtle_teleop"
+        launch-prefix="xterm -e"
+        required="true"
+    />
+    <param name="newTurtleName" value="kahve" />
+</launch>

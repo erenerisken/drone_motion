@@ -1,0 +1,8 @@
+prefix=/home/eren/Documents/ros_deneme/devel
+
+Name: crazyflie_driver
+Description: Description of crazyflie_driver
+Version: 0.0.1
+Cflags: -I/home/eren/Documents/ros_deneme/devel/include
+Libs: -L/home/eren/Documents/ros_deneme/devel/lib 
+Requires: message_runtime std_msgs tf crazyflie_cpp

@@ -1,0 +1,44 @@
+<launch>
+    <node name="publishPose" pkg="hectorquad" type="publishPose" output="screen" />
+    <node name="MultipleGoPose" pkg="hectorquad" type="multipleGoPose" output="screen" />
+    <group ns="uav1">
+        <node name="goPose" pkg="hectorquad" type="goPose" output="screen" />
+        <node name="rrtPlanner" pkg="hectorquad" type="rrtPlanner" output="screen" />
+        <param name="destX" value="10.0" />
+        <param name="destY" value="10.0" />
+        <param name="startX" value="-10.0" />
+        <param name="startY" value="-10.0" />
+        <param name="randomSeed" value="14" />
+        <node name="avoidCollision" pkg="hectorquad" type="avoidCollision" output="screen" />
+    </group>
+    <group ns="uav2">
+        <node name="goPose" pkg="hectorquad" type="goPose" output="screen" />
+        <node name="rrtPlanner" pkg="hectorquad" type="rrtPlanner" output="screen" />
+        <param name="destX" value="-10.0" />
+        <param name="destY" value="-10.0" />
+        <param name="startX" value="10.0" />
+        <param name="startY" value="10.0" />
+        <param name="randomSeed" value="7" />
+        <node name="avoidCollision" pkg="hectorquad" type="avoidCollision" output="screen" />
+    </group>
+    <group ns="uav3">
+        <node name="goPose" pkg="hectorquad" type="goPose" output="screen" />
+        <node name="rrtPlanner" pkg="hectorquad" type="rrtPlanner" output="screen" />
+        <param name="destX" value="-10.0" />
+        <param name="destY" value="10.0" />
+        <param name="startX" value="10.0" />
+        <param name="startY" value="-10.0" />
+        <param name="randomSeed" value="147" />
+        <node name="avoidCollision" pkg="hectorquad" type="avoidCollision" output="screen" />
+    </group>
+    <group ns="uav4">
+        <node name="goPose" pkg="hectorquad" type="goPose" output="screen" />
+        <node name="rrtPlanner" pkg="hectorquad" type="rrtPlanner" output="screen" />
+        <param name="destX" value="10.0" />
+        <param name="destY" value="-10.0" />
+        <param name="startX" value="-10.0" />
+        <param name="startY" value="10.0" />
+        <param name="randomSeed" value="1" />
+        <node name="avoidCollision" pkg="hectorquad" type="avoidCollision" output="screen" />
+    </group>
+</launch>

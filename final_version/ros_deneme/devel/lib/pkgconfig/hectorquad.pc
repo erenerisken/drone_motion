@@ -1,0 +1,8 @@
+prefix=/home/eren/Documents/ros_deneme/devel
+
+Name: hectorquad
+Description: Description of hectorquad
+Version: 0.0.0
+Cflags: -I/home/eren/Documents/ros_deneme/devel/include
+Libs: -L/home/eren/Documents/ros_deneme/devel/lib 
+Requires: 

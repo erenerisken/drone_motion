@@ -1,0 +1,37 @@
+<launch>
+    <node
+        pkg="turtlesim"
+        type="turtlesim_node"
+        name="turtlesim_node"
+        required="true"
+    />
+    <node
+        pkg="turtlesim"
+        type="turtle_teleop_key"
+        name="turtle_teleop"
+        required="true"
+        launch-prefix="xterm -e"    
+    >
+    <remap from="turtle1/cmd_vel" to="turtle1/cmd_key" />
+    </node>
+    <node
+        pkg="deneme"
+        type="returnBase"
+        name="returnBase"
+        launch-prefix="xterm -e"
+    />
+    <node
+        pkg="deneme"
+        type="regulateCmd"
+        name="regulateCmd"
+        output="screen"
+    />
+    <node
+        pkg="deneme"
+        type="setColor"
+        name="setColor"
+        launch-prefix="valgrind"
+    />
+    
+    <param name="color" value="red" />
+</launch>

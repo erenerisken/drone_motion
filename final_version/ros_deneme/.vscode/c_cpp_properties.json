@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true,
+                "path": []
+            },
+            "includePath": [
+                "/opt/ros/kinetic/include",
+                "/usr/include",
+                "/home/eren/Documents/ros_deneme/devel/include"
+            ],
+            "name": "Linux",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c11",
+            "cppStandard": "c++11"
+        }
+    ],
+    "version": 4
+}

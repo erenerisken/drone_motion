@@ -1,0 +1,8 @@
+prefix=/home/eren/Documents/ros_deneme/devel
+
+Name: deneme
+Description: Description of deneme
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/eren/Documents/ros_deneme/devel/lib 
+Requires: 

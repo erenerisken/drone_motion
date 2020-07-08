@@ -1,0 +1,8 @@
+prefix=/home/eren/Documents/ros_deneme/install
+
+Name: crazyflie_demo
+Description: Description of crazyflie_demo
+Version: 0.0.1
+Cflags: 
+Libs: -L/home/eren/Documents/ros_deneme/install/lib 
+Requires: roscpp
